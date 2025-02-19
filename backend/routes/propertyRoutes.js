@@ -27,6 +27,20 @@ router.get("/allproperty", async (req, res) => {
   }
 });
 
+router.get("/singleproperty/:id", async (req, res) => {
+  try {
+    const propertyid = req.params.id;
+
+    const property = await Property.findById(propertyid);
+    res.status(200).json({
+      status: "success",
+      data: property,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post("/create", async (req, res) => {
   try {
     const newProperty = new Property(req.body);
