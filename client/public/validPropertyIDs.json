@@ -1,0 +1,14 @@
+{
+  "propertyIDs": {
+    "P12345": {
+      "landSize": "10 acres",
+      "location": "New York",
+      "propertyType": "Farmhouse"
+    },
+    "P67890": {
+      "landSize": "5000 sqft",
+      "location": "Los Angeles",
+      "propertyType": "Apartment"
+    }
+  }
+}
