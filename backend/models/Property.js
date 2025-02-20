@@ -1,16 +1,14 @@
 const mongoose = require("mongoose");
 
-const PropertySchema = new mongoose.Schema({
-  accountAddress: String, // MetaMask Account Address
-  propertyTitle: String,
-  description: String,
-  category: String,
-  price: String,
-  images: String,
-  propertyAddress: String,
-  coverImage: String,
-  featuredImage: String,
-  createdAt: { type: Date, default: Date.now },
-});
-
+const PropertySchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    description: { type: String },
+    price: { type: Number, required: true },
+    category: { type: String },
+    accountAddress: { type: String },
+    arModelUrl: { type: String },
+  },
+  { timestamps: true }
+);
 module.exports = mongoose.model("Property", PropertySchema);

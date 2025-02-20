@@ -9,7 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/model-viewer": "^4.0.0",
     "@next/font": "13.4.1",
+    "@react-three/drei": "^9.121.5",
+    "@react-three/fiber": "^8.17.14",
+    "aframe": "^1.6.0",
     "axios": "^1.4.0",
     "ethers": "^5.7.2",
     "jspdf": "^2.5.2",
