@@ -1,0 +1,83 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    style.
+      .container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      }
+      .header {
+        text-align: center;
+        padding-bottom: 1.5rem;
+        border-bottom: 3px solid #4a90e2;
+      }
+      .header h1 {
+        color: #2c3e50;
+        margin: 0;
+        font-size: 2rem;
+      }
+      .content {
+        margin: 2rem 0;
+      }
+      .detail-card {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        border-left: 4px solid #4a90e2;
+      }
+      .detail-item {
+        margin: 0.5rem 0;
+        font-size: 1rem;
+        color: #34495e;
+      }
+      .detail-item strong {
+        color: #2c3e50;
+        min-width: 120px;
+        display: inline-block;
+      }
+      .footer {
+        text-align: center;
+        color: #7f8c8d;
+        padding-top: 2rem;
+        border-top: 1px solid #ecf0f1;
+      }
+  body
+    .container
+      .header
+        h1 🏡 Property Listed Successfully!
+
+      .content
+        p Your property has been successfully listed on our platform. Here are the details:
+
+        .detail-card
+          .detail-item
+            strong Property Title:
+            | #{property.title}
+          .detail-item
+            strong Description:
+            | #{property.description}
+          .detail-item
+            strong Price:
+            | $#{property.price.toLocaleString()}
+          .detail-item
+            strong Category:
+            | #{property.category}
+          .detail-item
+            strong Account Address:
+            | #{property.accountAddress}
+          .detail-item
+            strong Listed On:
+            | #{new Date(property.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+
+        p You can view your listing at any time through your dashboard:
+        a(href=url style="display: inline-block; background: #4a90e2; color: white; padding: 0.8rem 1.5rem; border-radius: 5px; text-decoration: none; margin: 1rem 0") View Dashboard
+
+      .footer
+        p Need help? Contact our support team at support@realestate.com
+        p © 2023 Real Estate Platform. All rights reserved.

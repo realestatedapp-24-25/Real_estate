@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const Property = require("../models/Property");
 const { uploadToCloudinary } = require("../controllers/cloudinary");
-
+const Email = require("./../utils/email");
 const upload = multer({ dest: "uploads/" });
 
 router.get("/allproperty", async (req, res) => {
@@ -43,35 +43,41 @@ router.get("/singleproperty/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 router.post("/create", async (req, res) => {
   try {
     const {
-      propertyTitle,
+      title,
       description,
-      category,
       price,
-      images,
-      propertyAddress,
+      category,
       accountAddress,
       arModelUrl,
+      email,
     } = req.body;
 
     const newProperty = new Property({
-      title: propertyTitle,
+      title,
       description,
       price,
       category,
       accountAddress,
-      propertyAddress,
-      images,
       arModelUrl,
+      email,
     });
 
     await newProperty.save();
-    res
-      .status(201)
-      .json({ message: "Property stored successfully", data: newProperty });
+
+    const userEmail = email;
+    await new Email(
+      userEmail,
+      `${req.protocol}://localhost:3000`
+    ).sendPropertyConfirmation(newProperty);
+
+    res.status(201).json({
+      status: "success",
+      message: "Property created successfully",
+      data: newProperty,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
