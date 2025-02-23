@@ -13,10 +13,6 @@ const ContactTwo = () => {
           >
             <div class="section-title mb--30 text-center">
               <h2 class="title">Quick Contact Address</h2>
-              <p class="description">
-                There are many variations of passages of Lorem Ipsum available,{" "}
-                <br /> but the majority have suffered alteration.
-              </p>
             </div>
           </div>
         </div>
@@ -48,10 +44,10 @@ const ContactTwo = () => {
               <div class="inner">
                 <h4 class="title">Contact Phone Number</h4>
                 <p>
-                  <a href="tel:+444555666777">+444 555 666 777</a>
+                  <a href="tel:9273075530">9273075539</a>
                 </p>
                 <p>
-                  <a href="tel:+222222222333">+222 222 222 333</a>
+                  <a href="tel:+7777234533">7777234533</a>
                 </p>
               </div>
             </div>
@@ -83,10 +79,12 @@ const ContactTwo = () => {
               <div class="inner">
                 <h4 class="title">Our Email Address</h4>
                 <p>
-                  <a href="mailto:admin@gmail.com">admin@gmail.com</a>
+                  <a href="mailto:realestate@kkwagh.edu.in">
+                    realestate@kkwagh.edu.in
+                  </a>
                 </p>
                 <p>
-                  <a href="mailto:example@gmail.com">example@gmail.com</a>
+                  <a href="mailto:example@gmail.com">kkwagh@gmail.com</a>
                 </p>
               </div>
             </div>
@@ -118,8 +116,8 @@ const ContactTwo = () => {
               <div class="inner">
                 <h4 class="title">Our Location</h4>
                 <p>
-                  5678 Bangla Main Road, cities 580 <br /> GBnagla, example
-                  54786
+                  Hirabai Haridas Vidyanagari, Amrutdham, <br /> Panchavati,
+                  Nashik, Maharashtra
                 </p>
               </div>
             </div>

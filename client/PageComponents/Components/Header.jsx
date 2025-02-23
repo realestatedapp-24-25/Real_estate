@@ -29,7 +29,7 @@ const Header = () => {
                     <li>
                       <a href="/about">About</a>
                     </li>
-                    <li>
+                    {/* <li>
                       <a>Explore</a>
                       <ul class="submenu">
                         <li>
@@ -50,7 +50,7 @@ const Header = () => {
                           </a>
                         </li>
                       </ul>
-                    </li>
+                    </li> */}
                     <li>
                       <a href="/contact">Contact</a>
                     </li>
@@ -62,49 +62,49 @@ const Header = () => {
                             Ranking<i class="feather-fast-forward"></i>
                           </Link>
                         </li>
-                        <li>
+                        {/* <li>
                           <a href="/product">
                             Product
                             <i class="feather-fast-forward"></i>
                           </a>
-                        </li>
+                        </li> */}
                         <li>
                           <a class="live-expo" href="/privacy">
                             Privacy
                           </a>
                         </li>
-                        <li>
+                        {/* <li>
                           <a class="live-expo" href="/news">
                             News
                           </a>
-                        </li>
-                        <li>
+                        </li> */}
+                        {/* <li>
                           <a class="live-expo" href="/fourm">
                             Fourm
                           </a>
-                        </li>
+                        </li> */}
                         <li>
                           <a class="live-expo" href="/connect">
                             Connect
                           </a>
                         </li>
-                        <li>
+                        {/* <li>
                           <a class="live-expo" href="/collection">
                             Collection
                           </a>
-                        </li>
-                        <li>
+                        </li> */}
+                        {/* <li>
                           <a class="live-expo" href="/blog">
                             Blog
                           </a>
-                        </li>
+                        </li> */}
                         <li>
                           <a class="live-expo" href="/blogdetail">
                             Blogdetail
                           </a>
                         </li>
                         
-                        <li>
+                        {/* <li>
                           <a class="live-expo" href="/forget">
                             Forget
                           </a>
@@ -118,7 +118,7 @@ const Header = () => {
                           <a class="live-expo" href="/signup">
                             Signup
                           </a>
-                        </li>
+                        </li> */}
                       </ul>
                     </li>
                   </ul>

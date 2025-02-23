@@ -1,75 +1,149 @@
-import React from "react";
-
+import React, { useState } from "react";
+import toast from "react-hot-toast";
 const ContactThree = () => {
+  // State to manage form fields
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+    agree: false,
+  });
+
+  // State to manage the success message
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Here, you can add any form validation or email sending logic
+
+    // Show success message
+    setSuccessMessage("Message sent successfully!");
+
+    // Clear the form after submission
+    setFormData({
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+      agree: false,
+    });
+
+    // Optionally, you can also reset the success message after a few seconds
+    setTimeout(() => setSuccessMessage(""), 5000);
+
+    toast.success("Message Send Successfully");
+  };
+
   return (
-    <div class="login-area message-area rn-section-gapTop">
-      <div class="container">
-        <div class="row g-5">
+    <div className="login-area message-area rn-section-gapTop">
+      <div className="container">
+        <div className="row g-5">
           <div
-            class="col-lg-6"
+            className="col-lg-6"
             data-sal="slide-up"
             data-sal-delay="150"
             data-sal-duration="800"
           >
-            <div class="connect-thumbnail">
-              <div class="left-image">
-                <img src="/contact/contact1.png" alt="Nft_Profile" />
+            <div className="connect-thumbnail">
+              <div className="left-image">
+                <img src="/contact/kkwagh.png" alt="Nft_Profile" />
               </div>
             </div>
           </div>
           <div
-            class="col-lg-6"
+            className="col-lg-6"
             data-sal="slide-up"
             data-sal-delay="200"
             data-sal-duration="800"
           >
-            <div class="form-wrapper-one registration-area">
-              <h3 class="mb--30">Contact Us</h3>
+            <div className="form-wrapper-one registration-area">
+              <h3 className="mb--30">Contact Us</h3>
+              {/* Success message */}
+              {successMessage && (
+                <div className="alert alert-success mb-4" role="alert">
+                  {successMessage}
+                </div>
+              )}
               <form
-                class="rwt-dynamic-form"
+                className="rwt-dynamic-form"
                 id="contact-form"
                 method="POST"
-                action="mail.php"
+                onSubmit={handleSubmit}
               >
-                <div class="mb-5">
-                  <label for="contact-name" class="form-label">
+                <div className="mb-5">
+                  <label htmlFor="contact-name" className="form-label">
                     Your Name
                   </label>
-                  <input name="contact-name" id="contact-name" type="text" />
+                  <input
+                    name="name"
+                    id="contact-name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                  />
                 </div>
-                <div class="mb-5">
-                  <label for="contact-email" class="form-label">
+                <div className="mb-5">
+                  <label htmlFor="contact-email" className="form-label">
                     Email
                   </label>
-                  <input id="contact-email" name="contact-email" type="email" />
+                  <input
+                    id="contact-email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                  />
                 </div>
-                <div class="mb-5">
-                  <label for="subject" class="form-label">
+                <div className="mb-5">
+                  <label htmlFor="subject" className="form-label">
                     Subject
                   </label>
-                  <input id="subject" name="subject" type="text" />
+                  <input
+                    id="subject"
+                    name="subject"
+                    type="text"
+                    value={formData.subject}
+                    onChange={handleInputChange}
+                  />
                 </div>
-                <div class="mb-5">
-                  <label for="contact-message" class="form-label">
+                <div className="mb-5">
+                  <label htmlFor="contact-message" className="form-label">
                     Write Message
                   </label>
                   <textarea
-                    name="contact-message"
+                    name="message"
                     id="contact-message"
                     rows="3"
+                    value={formData.message}
+                    onChange={handleInputChange}
                   ></textarea>
                 </div>
-                <div class="mb-5 rn-check-box">
+                <div className="mb-5 rn-check-box">
                   <input
                     id="condition"
                     type="checkbox"
-                    class="rn-check-box-input"
+                    className="rn-check-box-input"
+                    name="agree"
+                    checked={formData.agree}
+                    onChange={handleInputChange}
                   />
-                  <label for="condition" class="rn-check-box-label">
-                    Allow to all tearms & condition
+                  <label htmlFor="condition" className="rn-check-box-label">
+                    Allow to all terms & condition
                   </label>
                 </div>
-                <button name="submit" type="submit" class="btn btn-primary">
+                <button name="submit" type="submit" className="btn btn-primary">
                   Send Message
                 </button>
               </form>
