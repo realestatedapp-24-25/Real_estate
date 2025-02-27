@@ -225,11 +225,11 @@ exports.createDonation = catchAsync(async (req, res, next) => {
         return next(new AppError('Invalid donation data', 400));
     }
 
-    // Find shop and validate - Add populate for user
+    // Find shop and validate
     const shop = await Shop.findById(shopId).populate('user');
     if (!shop) return next(new AppError('Shop not found', 404));
 
-    // Find institute and validate - Add populate for user
+    // Find institute and validate
     const institute = await Institute.findById(instituteId).populate('user');
     if (!institute) return next(new AppError('Institute not found', 404));
 
@@ -269,7 +269,7 @@ exports.createDonation = catchAsync(async (req, res, next) => {
         totalAmount
     });
 
-    // Update shop inventory using findOneAndUpdate instead of save()
+    // Update shop inventory
     for (const item of items) {
         await Shop.findOneAndUpdate(
             { 
@@ -283,7 +283,7 @@ exports.createDonation = catchAsync(async (req, res, next) => {
         );
     }
 
-    // Update request status
+    // Update request status and fulfillment details
     const remainingItems = request.items.map(reqItem => {
         const fulfilledItem = fulfilledItems.find(item => item.name === reqItem.name);
         if (fulfilledItem) {
@@ -443,4 +443,24 @@ exports.getShopDonations = catchAsync(async (req, res, next) => {
       donations
     }
   });
+});
+
+exports.getInstituteDonations = catchAsync(async (req, res, next) => {
+    // Find the institute associated with the logged-in user
+    const institute = await Institute.findOne({ user: req.user.id });
+
+    if (!institute) {
+        return next(new AppError('No institute found for this user', 404));
+    }
+
+    // Fetch donations related to the institute
+    const donations = await Donation.find({ institute: institute._id }).populate('shop', 'shopName');
+
+    res.status(200).json({
+        status: 'success',
+        results: donations.length,
+        data: {
+            donations
+        }
+    });
 });
