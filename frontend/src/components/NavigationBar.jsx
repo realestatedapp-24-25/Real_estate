@@ -58,16 +58,6 @@ function NavigationBar() {
                 Home
               </Link>
               <Link
-                to="/insurance"
-                className={`text-lg font-medium ${
-                  isActive("/insurance")
-                    ? "text-gray-900"
-                    : "text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                Insurances
-              </Link>
-              <Link
                 to="/requests"
                 className={`text-lg font-medium ${
                   isActive("/requests")
@@ -252,12 +242,6 @@ function NavigationBar() {
                 className="block px-3 py-3 rounded-md text-lg font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
               >
                 Home
-              </Link>
-              <Link
-                to="/insurance"
-                className="block px-3 py-3 rounded-md text-lg font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-              >
-                Insurances
               </Link>
               <Link
                 to="/requests"

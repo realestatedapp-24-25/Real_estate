@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./page/HomePage";
 import SignupPage from "./page/SignupPage";
 import SigninPage from "./page/SigninPage";
@@ -6,7 +6,7 @@ import DonorDashboard from "./components/Dashboards/DonorDashboard";
 import InstituteDashboard from "./components/Dashboards/InstituteDashboard";
 import UserDashboard from "./components/Dashboards/UserDashboard";
 import DashLayout from "./components/DashLayout";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, AuthContext } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NavigationBar from "./components/NavigationBar";
 import Footer from "./components/Footer";
@@ -16,6 +16,8 @@ import RequestDetail from './components/RequestDetail';
 import DonationProcess from './components/DonationProcess';
 import DonationDetails from './components/DonationDetails';
 import MyDonations from './components/MyDonations';
+import RequestForm from './components/RequestForm';
+import { useContext } from 'react';
 
 function App() {
   return (
@@ -42,7 +44,24 @@ function App() {
                 </ProtectedRoute>
               }
             >
+              <Route index element={<UserDashboard />} />
               {/* Profile routes here */}
+              <Route
+                path="send-request"
+                element={
+                  <InstituteRoute>
+                    <RequestForm />
+                  </InstituteRoute>
+                }
+              />
+              <Route
+                path="my-donations"
+                element={
+                  <DonorRoute>
+                    <MyDonations />
+                  </DonorRoute>
+                }
+              />
             </Route>
 
             <Route
@@ -53,17 +72,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            <Route 
-              path="/profile/my-donations" 
-              element={
-                <ProtectedRoute>
-                  <DashLayout>
-                    <MyDonations />
-                  </DashLayout>
-                </ProtectedRoute>
-              } 
-            />
           </Routes>
           <Footer />
         </div>
@@ -71,5 +79,31 @@ function App() {
     </AuthProvider>
   );
 }
+
+// Add this component to protect institute-only routes
+const InstituteRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
+  
+  if (loading) return <div>Loading...</div>;
+  
+  if (!user || user.role !== 'institute') {
+    return <Navigate to="/profile" replace />;
+  }
+  
+  return children;
+};
+
+// Add this component to protect donor-only routes
+const DonorRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
+  
+  if (loading) return <div>Loading...</div>;
+  
+  if (!user || user.role !== 'donor') {
+    return <Navigate to="/profile" replace />;
+  }
+  
+  return children;
+};
 
 export default App;
