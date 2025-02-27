@@ -16,6 +16,7 @@ export default function DonationDetails() {
             address: shop.address,
             items: shop.inventory.map(item => ({
                 name: item.itemName,
+                itemName: item.itemName,
                 quantity: 0,
                 unit: item.unit,
                 maxQuantity: item.quantity,
@@ -37,24 +38,37 @@ export default function DonationDetails() {
 
     const handleDonation = async (shopId, items) => {
         try {
-            const filteredItems = items.filter(item => item.quantity > 0);
+            console.log('Items before filtering:', items);
+
+            const filteredItems = items.filter(item => item.quantity > 0)
+                .map(item => ({
+                    name: item.name || item.itemName,
+                    quantity: item.quantity,
+                    unit: item.unit
+                }));
             
             if (filteredItems.length === 0) {
                 alert('Please select at least one item to donate');
                 return;
             }
 
+            console.log('Sending donation request:', {
+                shopId,
+                items: filteredItems
+            });
+
             const response = await axios.post(
                 `/api/v1/donors/institute/${instituteId}/donate`,
                 {
                     shopId,
-                    items: filteredItems.map(({ name, quantity, unit }) => ({
-                        name,
-                        quantity,
-                        unit
-                    }))
+                    items: filteredItems
                 },
-                { withCredentials: true }
+                { 
+                    withCredentials: true,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
             );
 
             if (response.data.status === 'success') {
@@ -63,7 +77,17 @@ export default function DonationDetails() {
             }
         } catch (error) {
             console.error('Donation failed:', error);
-            alert('Failed to process donation: ' + error.response?.data?.message || 'Unknown error');
+            console.error('Error details:', error.response?.data);
+            console.error('Request data:', {
+                shopId,
+                items: items.filter(item => item.quantity > 0)
+                    .map(item => ({
+                        name: item.name || item.itemName,
+                        quantity: item.quantity,
+                        unit: item.unit
+                    }))
+            });
+            alert('Failed to process donation: ' + (error.response?.data?.message || 'Unknown error'));
         }
     };
 

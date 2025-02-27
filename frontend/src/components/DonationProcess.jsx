@@ -205,20 +205,25 @@ const DonationProcess = () => {
             alert('Please select at least one shop');
             return;
         }
-        // Pass only the necessary shop data
+
+        // Log the data being passed
+        console.log('Selected shops data:', selectedShops);
+
         const shopData = selectedShops.map(shop => ({
             _id: shop._id,
             shopName: shop.shopName,
             contactInfo: shop.contactInfo,
             address: shop.user.address,
             inventory: shop.inventory.map(item => ({
-                itemName: item.itemName,
+                itemName: item.itemName,  // Make sure this matches the backend expectation
                 quantity: item.quantity,
                 unit: item.unit,
                 pricePerUnit: item.pricePerUnit,
                 category: item.category
             }))
         }));
+
+        console.log('Processed shop data:', shopData);
 
         navigate(`/donate/${instituteId}/details`, { 
             state: { 
