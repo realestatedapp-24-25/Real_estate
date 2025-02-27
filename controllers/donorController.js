@@ -2,7 +2,7 @@ const Donor = require('../models/donorModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const Shop = require('../models/shopModel');
-const Institute = require('../models/InstituteModel');
+const Institute = require('../models/instituteModel');
 const Request = require('../models/requestModel');
 const Donation = require('../models/donationModel');
 const Email = require('../utils/email');
@@ -72,8 +72,10 @@ exports.deleteDonor = catchAsync(async (req, res, next) => {
 });
 
 exports.getShopsNearInstitute = catchAsync(async (req, res, next) => {
-    // 1) Get institute
-    const institute = await Institute.findById(req.params.id);
+    // 1) Get institute with all fields and populate user
+    const institute = await Institute.findById(req.params.id)
+        .populate('user');
+
     if (!institute) {
         return next(new AppError('No institute found with that ID', 404));
     }
@@ -86,7 +88,7 @@ exports.getShopsNearInstitute = catchAsync(async (req, res, next) => {
         return next(new AppError('Invalid radius value', 400));
     }
 
-    // 3) Find shops using geospatial query
+    // 3) Find shops using geospatial query with all fields
     const shops = await Shop.aggregate([
         {
             $geoNear: {
@@ -103,29 +105,24 @@ exports.getShopsNearInstitute = catchAsync(async (req, res, next) => {
             $match: {
                 verificationStatus: true
             }
-        },
-        {
-            $project: {
-                _id: 1,
-                shopName: 1,
-                distance: 1,
-                inventory: 1,
-                contactInfo: 1,
-                rating: 1
-            }
         }
     ]);
 
-    // 4) Handle no shops found
-    if (shops.length === 0) {
+    // 4) Populate user details for shops
+    const populatedShops = await Shop.populate(shops, [
+        { path: 'user' }
+    ]);
+
+    // 5) Handle no shops found
+    if (populatedShops.length === 0) {
         return res.status(404).json({
             status: 'fail',
             message: `No verified shops found within ${radius}m radius`
         });
     }
 
-    // 5) Format response with exact meter distances
-    const response = shops.map(shop => ({
+    // 6) Format response with exact meter distances but keep all other fields
+    const response = populatedShops.map(shop => ({
         ...shop,
         distance: Math.round(shop.distance) // Round to nearest meter
     }));
@@ -135,8 +132,8 @@ exports.getShopsNearInstitute = catchAsync(async (req, res, next) => {
         results: response.length,
         data: {
             radius: radius,
-            institute: institute._id,
-            shops: response
+            institute, // Send complete institute object
+            shops: response // Send complete shop objects
         }
     });
 });
@@ -222,27 +219,47 @@ exports.createDonation = catchAsync(async (req, res, next) => {
     const { shopId, items } = req.body;
     const instituteId = req.params.instituteId;
 
+    // Add validation
+    if (!shopId || !items || !Array.isArray(items) || items.length === 0) {
+        return next(new AppError('Invalid donation data', 400));
+    }
+
+    // Find shop and validate
     const shop = await Shop.findById(shopId);
     if (!shop) return next(new AppError('Shop not found', 404));
 
+    // Find institute and validate
     const institute = await Institute.findById(instituteId).populate('user');
     if (!institute) return next(new AppError('Institute not found', 404));
 
-    const request = await Request.findOne({ institute: instituteId, status: { $in: ['pending', 'partially fulfilled'] } });
+    // Find active request
+    const request = await Request.findOne({ 
+        institute: instituteId, 
+        status: { $in: ['pending', 'partially fulfilled'] } 
+    });
     if (!request) return next(new AppError('No pending or partially fulfilled request found for this institute', 404));
 
     let totalAmount = 0;
     const fulfilledItems = [];
 
-    items.forEach(item => {
+    // Validate items and calculate total
+    for (const item of items) {
         const shopItem = shop.inventory.find(i => i.itemName === item.name);
-        if (!shopItem || shopItem.quantity < item.quantity) {
+        if (!shopItem) {
+            return next(new AppError(`Item ${item.name} not found in shop inventory`, 400));
+        }
+        if (shopItem.quantity < item.quantity) {
             return next(new AppError(`Insufficient stock for ${item.name}`, 400));
         }
         totalAmount += shopItem.pricePerUnit * item.quantity;
-        fulfilledItems.push({ name: item.name, quantity: item.quantity, unit: item.unit });
-    });
+        fulfilledItems.push({ 
+            name: item.name, 
+            quantity: item.quantity, 
+            unit: item.unit 
+        });
+    }
 
+    // Create donation
     const donation = await Donation.create({
         donor: req.user.id,
         institute: instituteId,
@@ -251,26 +268,31 @@ exports.createDonation = catchAsync(async (req, res, next) => {
         totalAmount
     });
 
-    items.forEach(item => {
-        const shopItem = shop.inventory.find(i => i.itemName === item.name);
-        shopItem.quantity -= item.quantity;
-    });
-    await shop.save();
+    // Update shop inventory using findOneAndUpdate instead of save()
+    for (const item of items) {
+        await Shop.findOneAndUpdate(
+            { 
+                _id: shopId,
+                'inventory.itemName': item.name
+            },
+            {
+                $inc: { 'inventory.$.quantity': -item.quantity }
+            },
+            { new: true }
+        );
+    }
 
-    // Update request fulfillment details
+    // Update request status
     const remainingItems = request.items.map(reqItem => {
         const fulfilledItem = fulfilledItems.find(item => item.name === reqItem.name);
         if (fulfilledItem) {
             reqItem.quantity -= fulfilledItem.quantity;
-            if (reqItem.quantity < 0) reqItem.quantity = 0; // Ensure quantity does not go negative
+            if (reqItem.quantity < 0) reqItem.quantity = 0;
         }
         return reqItem;
     });
 
-    let requestStatus = 'fulfilled';
-    if (remainingItems.some(item => item.quantity > 0)) {
-        requestStatus = 'partially fulfilled';
-    }
+    const requestStatus = remainingItems.some(item => item.quantity > 0) ? 'partially fulfilled' : 'fulfilled';
 
     await Request.findByIdAndUpdate(request._id, {
         status: requestStatus,
@@ -281,19 +303,90 @@ exports.createDonation = catchAsync(async (req, res, next) => {
         }
     });
 
-    // Generate QR code
-    const qrCodeData = await QRCode.toDataURL(donation._id.toString());
-
-    // Send email to the user associated with the institute
-    const instituteEmail = new Email({ email: institute.user.email, name: institute.user.name }, '');
-    await instituteEmail.sendDonationNotificationWithQR(institute.name, items, totalAmount, qrCodeData);
-
-    // Send email to the shopkeeper
-    const shopkeeperEmail = new Email({ email: shop.contactInfo.email, name: shop.shopName }, '');
-    await shopkeeperEmail.sendDonationNotification(shop.shopName, items, totalAmount);
-
     res.status(201).json({
         status: 'success',
         data: { donation }
+    });
+});
+
+// Get nearby shops for an institute
+exports.getNearbyShops = catchAsync(async (req, res, next) => {
+    const { instituteId } = req.params;
+    const radius = Number(req.query.radius) || 500;
+
+    // Get institute with all details including user
+    const institute = await Institute.findById(instituteId)
+        .populate('user');
+
+    if (!institute) {
+        return next(new AppError('Institute not found', 404));
+    }
+
+    // Find shops within radius
+    const shops = await Shop.aggregate([
+        {
+            $geoNear: {
+                near: institute.geolocation,
+                distanceField: "distance",
+                maxDistance: radius,
+                spherical: true,
+                query: { verificationStatus: true }
+            }
+        }
+    ]);
+
+    // Populate all details for each shop
+    const populatedShops = await Shop.populate(shops, [
+        { path: 'user' }
+    ]);
+
+    if (!populatedShops.length) {
+        return next(new AppError(`No verified shops found within ${radius}m radius`, 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        results: populatedShops.length,
+        data: {
+            radius,
+            institute,
+            shops: populatedShops
+        }
+    });
+});
+
+exports.getMyDonations = catchAsync(async (req, res, next) => {
+    const donations = await Donation.find({ 
+        donor: req.user.id,
+        institute: { $ne: null } // Only get donations with valid institute
+    })
+    .populate({
+        path: 'institute',
+        select: 'institute_name institute_type user',
+        populate: {
+            path: 'user',
+            select: 'name email address'
+        }
+    })
+    .populate({
+        path: 'shop',
+        select: 'shopName contactInfo'
+    })
+    .sort('-createdAt');
+
+    // Filter out any donations with null values
+    const validDonations = donations.filter(donation => 
+        donation.institute && 
+        donation.shop && 
+        donation.items && 
+        donation.items.length > 0
+    );
+
+    res.status(200).json({
+        status: 'success',
+        results: validDonations.length,
+        data: {
+            donations: validDonations
+        }
     });
 }); 

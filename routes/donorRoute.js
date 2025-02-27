@@ -7,6 +7,9 @@ const router = express.Router();
 // Protect all routes after this middleware
 router.use(authController.protect);
 
+// Add this route for all authenticated users
+router.get('/my-donations', donorController.getMyDonations);
+
 // Restrict routes to specific roles
 router
   .route('/')

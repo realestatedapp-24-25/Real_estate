@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 const pug = require("pug");
 const { convert } = require("html-to-text");
+const path = require('path');
 
 module.exports = class Email {
   constructor(user, url) {
@@ -92,5 +93,9 @@ module.exports = class Email {
       totalAmount,
       qrCodeData
     });
+  }
+
+  async sendAnomalyAlert() {
+    await this.send('anomalyAlert', 'High Request Activity Alert');
   }
 };

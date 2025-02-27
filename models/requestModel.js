@@ -11,22 +11,17 @@ const requestSchema = new mongoose.Schema({
         quantity: { type: Number, required: true },
         unit: { type: String, required: true }
     }],
-    category: {
+    urgency: {
         type: String,
-        enum: ['FOOD', 'CLOTHING', 'EDUCATION', 'MEDICAL', 'OTHER'],
-        required: true
-    },
-    priority: {
-        type: String,
-        enum: ['HIGH', 'MEDIUM', 'LOW'],
+        enum: ['LOW', 'MEDIUM', 'HIGH'],
         default: 'MEDIUM'
     },
     status: {
         type: String,
-        enum: ['pending', 'fulfilled'],
+        enum: ['pending', 'partially_fulfilled', 'fulfilled', 'cancelled'],
         default: 'pending'
     },
-    comments: String,
+    description: { type: String },
     createdAt: {
         type: Date,
         default: Date.now
@@ -36,5 +31,4 @@ const requestSchema = new mongoose.Schema({
 // Prevent automatic _id generation for items
 requestSchema.path('items').schema.set('_id', false);
 
-module.exports = mongoose.model('Request', requestSchema);
 module.exports = mongoose.model('Request', requestSchema);

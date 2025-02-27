@@ -7,7 +7,18 @@ const router = express.Router();
 // Protect all routes after this middleware
 router.use(authController.protect);
 
+// Add this new route for getting request with nearby shops
+router.get('/:id/shops', requestController.getRequestWithShops);
+
 // Routes for requests
+router
+  .route('/search')
+  .get(
+    authController.protect, 
+    authController.restrictTo('admin', 'donor', 'institute'),
+    requestController.searchRequests
+  );
+
 router
   .route('/')
   .get(authController.restrictTo('admin', 'institute', 'shopkeeper', 'donor'), requestController.getAllRequests)
@@ -15,6 +26,7 @@ router
 
 router
   .route('/:id')
-  .get(authController.restrictTo('admin', 'institute', 'shopkeeper', 'donor'), requestController.getRequest);
+  .get(authController.restrictTo('admin', 'institute', 'shopkeeper', 'donor'), requestController.getRequest)
+ 
 
 module.exports = router; 
