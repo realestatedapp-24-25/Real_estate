@@ -97,4 +97,170 @@ exports.getNearbyShops = catchAsync(async (req, res, next) => {
         results: shops.length,
         data: { shops }
     });
+});
+
+exports.getInventory = catchAsync(async (req, res, next) => {
+    const shop = await Shop.findOne({ user: req.user.id });
+    
+    if (!shop) {
+        return next(new AppError('Shop not found', 404));
+    }
+
+    res.status(200).json({
+        status: 'success',
+        results: shop.inventory.length,
+        data: {
+            inventory: shop.inventory
+        }
+    });
+});
+
+exports.updateInventory = catchAsync(async (req, res, next) => {
+    const { items } = req.body;
+    
+    // Validate input
+    if (!items || !Array.isArray(items)) {
+        return next(new AppError('Please provide valid inventory items array', 400));
+    }
+
+    // Validate each item
+    for (const item of items) {
+        if (!item.itemName || !item.quantity || !item.unit || !item.pricePerUnit) {
+            return next(new AppError('Each item must have itemName, quantity, unit, and pricePerUnit', 400));
+        }
+    }
+
+    // Find shop and update inventory
+    const shop = await Shop.findOne({ user: req.user.id });
+    
+    if (!shop) {
+        return next(new AppError('Shop not found', 404));
+    }
+
+    // Merge new items with existing inventory
+    const updatedInventory = [...shop.inventory];
+    
+    items.forEach(newItem => {
+        const existingItemIndex = updatedInventory.findIndex(item => 
+            item.itemName.toLowerCase() === newItem.itemName.toLowerCase() && 
+            item.unit.toLowerCase() === newItem.unit.toLowerCase()
+        );
+
+        if (existingItemIndex !== -1) {
+            // Update existing item
+            updatedInventory[existingItemIndex] = {
+                ...updatedInventory[existingItemIndex],
+                ...newItem
+            };
+        } else {
+            // Add new item
+            updatedInventory.push(newItem);
+        }
+    });
+
+    shop.inventory = updatedInventory;
+    await shop.save();
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            inventory: shop.inventory
+        }
+    });
+});
+
+exports.addInventoryItem = catchAsync(async (req, res, next) => {
+    const { itemName, quantity, unit, pricePerUnit } = req.body;
+
+    // Validate input
+    if (!itemName || !quantity || !unit || !pricePerUnit) {
+        return next(new AppError('Please provide itemName, quantity, unit, and pricePerUnit', 400));
+    }
+
+    const shop = await Shop.findOne({ user: req.user.id });
+    
+    if (!shop) {
+        return next(new AppError('Shop not found', 404));
+    }
+
+    // Check if item already exists
+    const existingItemIndex = shop.inventory.findIndex(item => 
+        item.itemName.toLowerCase() === itemName.toLowerCase() && 
+        item.unit.toLowerCase() === unit.toLowerCase()
+    );
+
+    if (existingItemIndex !== -1) {
+        // Update existing item
+        shop.inventory[existingItemIndex].quantity += quantity;
+        shop.inventory[existingItemIndex].pricePerUnit = pricePerUnit;
+    } else {
+        // Add new item
+        shop.inventory.push({
+            itemName,
+            quantity,
+            unit,
+            pricePerUnit
+        });
+    }
+
+    await shop.save();
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            inventory: shop.inventory
+        }
+    });
+});
+
+exports.updateInventoryItem = catchAsync(async (req, res, next) => {
+    const { itemId } = req.params;
+    const { quantity, pricePerUnit } = req.body;
+
+    const shop = await Shop.findOne({ user: req.user.id });
+    
+    if (!shop) {
+        return next(new AppError('Shop not found', 404));
+    }
+
+    const item = shop.inventory.id(itemId);
+    if (!item) {
+        return next(new AppError('Item not found in inventory', 404));
+    }
+
+    // Update item
+    if (quantity !== undefined) item.quantity = quantity;
+    if (pricePerUnit !== undefined) item.pricePerUnit = pricePerUnit;
+
+    await shop.save();
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            item
+        }
+    });
+});
+
+exports.deleteInventoryItem = catchAsync(async (req, res, next) => {
+    const { itemId } = req.params;
+
+    const shop = await Shop.findOne({ user: req.user.id });
+    
+    if (!shop) {
+        return next(new AppError('Shop not found', 404));
+    }
+
+    const item = shop.inventory.id(itemId);
+    if (!item) {
+        return next(new AppError('Item not found in inventory', 404));
+    }
+
+    item.remove();
+    await shop.save();
+
+    res.status(204).json({
+        status: 'success',
+        data: null
+    });
 }); 

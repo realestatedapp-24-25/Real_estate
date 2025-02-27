@@ -21,4 +21,21 @@ router
 
 router.get('/nearby', authController.restrictTo('donor'), shopController.getNearbyShops);
 
+// Protect all inventory routes
+router.use(authController.protect);
+router.use(authController.restrictTo('shopkeeper'));
+
+// Inventory management routes
+router
+    .route('/inventory')
+    .get(shopController.getInventory)
+    .post(shopController.updateInventory);
+
+router.post('/inventory/item', shopController.addInventoryItem);
+
+router
+    .route('/inventory/item/:itemId')
+    .patch(shopController.updateInventoryItem)
+    .delete(shopController.deleteInventoryItem);
+
 module.exports = router;

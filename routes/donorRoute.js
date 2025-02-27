@@ -9,7 +9,12 @@ router.use(authController.protect);
 
 // Add this route for all authenticated users
 router.get('/my-donations', donorController.getMyDonations);
-
+router
+  .route('/shop-donations')
+  .get(
+    authController.restrictTo('shopkeeper'),
+    donorController.getShopDonations
+  );
 // Restrict routes to specific roles
 router
   .route('/')

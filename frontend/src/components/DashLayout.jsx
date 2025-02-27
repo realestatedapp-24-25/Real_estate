@@ -73,7 +73,7 @@ const DashLayout = ({ children }) => {
             )}
 
             {/* Shop Links */}
-            {user?.role === "shop" && (
+            {user?.role === "shopkeeper" && (
               <NavLink
                 to="/profile/donations"
                 className={({ isActive }) =>

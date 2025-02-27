@@ -422,3 +422,25 @@ exports.getMyDonations = catchAsync(async (req, res, next) => {
         }
     });
 }); 
+exports.getShopDonations = catchAsync(async (req, res, next) => {
+  // Find the shop associated with the logged-in user
+  const shop = await Shop.findOne({ user: req.user.id });
+
+  if (!shop) {
+    return next(new AppError('No shop found for this user', 404));
+  }
+
+  // Find all donations sent to this shop
+  const donations = await Donation.find({ shop: shop._id })
+    .sort('-createdAt') // Sort by newest first
+    .populate('items.item', 'name unit') // Populate item details
+    .populate('donor', 'name email'); // Populate donor details
+
+  res.status(200).json({
+    status: 'success',
+    results: donations.length,
+    data: {
+      donations
+    }
+  });
+});

@@ -6,6 +6,7 @@ const Shop = require('../models/shopModel');
 const User = require('../models/userModel');
 const checkAnomaly = require('../utils/anomalyDetection');
 const Email = require('../utils/email');
+const mongoose = require('mongoose');
 
 const sendAnomalyAlert = async (institute, requestCount) => {
     try {
@@ -337,6 +338,30 @@ exports.searchRequests = catchAsync(async (req, res, next) => {
         total: countResult ? countResult.total : 0,
         totalPages: countResult ? Math.ceil(countResult.total / limit) : 0,
         currentPage: parseInt(page),
+        data: {
+            requests
+        }
+    });
+});
+exports.getMyRequests = catchAsync(async (req, res, next) => {
+    // 1) Find the institute associated with the logged-in user
+    const institute = await Institute.findOne({ user: req.user.id });
+
+    if (!institute) {
+        return next(new AppError('No institute found for this user', 404));
+    }
+
+    // 2) Find all requests made by this institute
+    const requests = await Request.find({ institute: institute._id })
+        .populate({
+            path: 'institute',
+            populate: { path: 'user', select: 'name email address' }
+        });
+
+    // 3) Send the response
+    res.status(200).json({
+        status: 'success',
+        results: requests.length,
         data: {
             requests
         }

@@ -18,6 +18,7 @@ import DonationDetails from './components/DonationDetails';
 import MyDonations from './components/MyDonations';
 import RequestForm from './components/RequestForm';
 import { useContext } from 'react';
+import MyRequest from "./components/Myrequest";
 
 function App() {
   return (
@@ -51,6 +52,14 @@ function App() {
                 element={
                   <InstituteRoute>
                     <RequestForm />
+                  </InstituteRoute>
+                }
+              />
+              <Route
+                path="requests"
+                element={
+                  <InstituteRoute>
+                    <MyRequest />
                   </InstituteRoute>
                 }
               />
