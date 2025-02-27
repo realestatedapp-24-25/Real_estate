@@ -34,14 +34,13 @@ module.exports = class Email {
   // Send the actual email
   async send(template, subject) {
     try {
-      console.log("Sending email with data:", this.data);
-
       const html = pug.renderFile(`${__dirname}/../email/${template}.pug`, {
         firstName: this.firstName,
         subject,
         instituteName: this.data.instituteName,
         items: this.data.items || [],
         totalAmount: this.data.totalAmount,
+        verificationCode: this.data.verificationCode,
         qrCodeData: this.data.qrCodeData,
         shopName: this.data.shopName,
         instituteAddress: this.data.instituteAddress

@@ -19,14 +19,18 @@ html(lang="en")
       
       p Total Amount: ₹#{totalAmount}
       
-      div(style="text-align: center; margin: 20px 0;")
-        img(src=qrCodeData alt="Delivery QR Code" style="width: 200px;")
-        p Please scan this QR code when the delivery arrives
-      
-      p The shopkeeper will need to:
-      p 1. Be within 120 meters of your location
-      p 2. Scan this QR code
-      p 3. Take a photo of the delivered items
+      div(style="text-align: center; margin: 20px 0; padding: 20px; background-color: #f5f5f5; border-radius: 8px;")
+        h3(style="margin-bottom: 15px;") Delivery Verification Code
+        p(style="margin: 15px 0; font-size: 18px;") Your verification code:
+        p(style="font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #333; background: #fff; padding: 10px; border-radius: 4px;") #{verificationCode}
+        p(style="margin-top: 15px;") Provide this code to the delivery person to verify the delivery
+
+      p.instructions(style="margin-top: 20px;")
+        strong Delivery Instructions:
+        br
+        | 1. Provide the verification code to the delivery person.
+        br
+        | 2. The delivery must be made within 120 meters of your location.
       
       p Best regards,
-      p The Team 
+      p The Team

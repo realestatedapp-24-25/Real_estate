@@ -305,41 +305,23 @@ exports.createDonation = catchAsync(async (req, res, next) => {
     });
 
     try {
-        // Generate QR code for delivery verification
-        const qrCodeData = await shippingController.generateDeliveryQR(donation._id);
-
-        // Send email to institute with QR code
-        console.log('Sending email to institute:', {
-            instituteName: institute.institute_name,
-            items: fulfilledItems,
-            totalAmount,
-            qrCodeData
-        });
-
-        if (!institute.user || !institute.user.email || !institute.user.name) {
-            throw new Error('Institute user data is incomplete');
+        // Generate verification code
+        const result = await shippingController.generateDeliveryCode(donation._id);
+        if (!result || !result.verificationCode) {
+            throw new Error('Failed to retrieve verification code');
         }
+        const verificationCode = result.verificationCode;
+        console.log('Verification code generation successful');
 
+        // Send email to institute with verification code
         await new Email(institute.user, {
             instituteName: institute.institute_name,
             items: fulfilledItems,
             totalAmount,
-            qrCodeData
+            verificationCode
         }).sendDonationNotificationWithQR();
 
         // Send email to shop
-        console.log('Sending email to shop:', {
-            shopName: shop.shopName,
-            instituteName: institute.institute_name,
-            instituteAddress: institute.user.address,
-            items: fulfilledItems,
-            totalAmount
-        });
-
-        if (!shop.user || !shop.user.email || !shop.user.name) {
-            throw new Error('Shop user data is incomplete');
-        }
-
         await new Email(shop.user, {
             shopName: shop.shopName,
             instituteName: institute.institute_name,
@@ -348,10 +330,9 @@ exports.createDonation = catchAsync(async (req, res, next) => {
             totalAmount
         }).sendShopDeliveryNotification();
 
-        console.log('Emails sent successfully');
+        console.log('Email sent successfully');
     } catch (error) {
-        console.error('Error sending emails:', error);
-        // Don't throw error, just log it - emails shouldn't block donation creation
+        console.error('Error in donation process:', error.message);
     }
 
     res.status(201).json({

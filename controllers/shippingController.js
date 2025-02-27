@@ -1,99 +1,140 @@
+const cloudinary = require('../config/cloudinary');
 const geolib = require('geolib');
 const Shipping = require('../models/shippingModel');
 const Donation = require('../models/donationModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
-const Request = require('../models/requestModel');
 const Email = require('../utils/email');
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
+// shippingController.js
+exports.generateDeliveryQR = async (donationId) => {
+    try {
+        const verificationCode = uuidv4().substring(0, 8).toUpperCase();
+        
+        await Shipping.create({
+            donation: donationId,
+            qrCode: verificationCode,
+            status: 'preparing'
+        });
 
-exports.generateDeliveryQR = catchAsync(async (donationId) => {
-    const qrCode = uuidv4();
-    const qrImageData = await QRCode.toDataURL(qrCode);
-    
-    await Shipping.create({
-        donation: donationId,
-        qrCode,
-        deliveryProof: {
-            coordinates: {
-                type: "Point",
-                coordinates: [0, 0] // Default coordinates, will be updated during delivery
-            }
-        }
-    });
+        return { verificationCode };
+    } catch (error) {
+        console.error('QR Generation Error:', error);
+        throw error; // Propagate the error to be caught by the caller
+    }
+};
 
-    return qrImageData;
-});
+exports.generateDeliveryCode = async (donationId) => {
+    try {
+        // Generate a simple random number as the verification code
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+
+        await Shipping.create({
+            donation: donationId,
+            qrCode: verificationCode, // Store the verification code here
+            status: 'preparing'
+        });
+
+        console.log('Verification Code generated:', verificationCode);
+        return { verificationCode };
+    } catch (error) {
+        console.error('Verification Code Generation Error:', error);
+        throw error;
+    }
+};
 
 exports.verifyDelivery = catchAsync(async (req, res, next) => {
-    const { qrCode } = req.params;
-    const { photo, coordinates } = req.body;
+    const { latitude, longitude } = req.body;
+    const { code } = req.params;
 
-    // Find shipping record
-    const shipping = await Shipping.findOne({ qrCode })
+    // Find shipping record using the code
+    const shipping = await Shipping.findOne({ qrCode: code.toUpperCase() })
         .populate({
             path: 'donation',
             populate: [
-                { path: 'institute' },
-                { path: 'shop' }
+                { path: 'institute', select: 'institute_name geolocation' },
+                { path: 'shop', select: 'shopName user' }
             ]
         });
 
     if (!shipping) {
-        return next(new AppError('Invalid QR code', 400));
+        return next(new AppError('Invalid verification code', 400));
+    }
+
+    // Check if already delivered
+    if (shipping.status === 'delivered') {
+        return next(new AppError('This delivery has already been verified', 400));
     }
 
     // Verify shopkeeper
     if (shipping.donation.shop.user.toString() !== req.user.id) {
-        return next(new AppError('You are not authorized to deliver this donation', 403));
+        return next(new AppError('You are not authorized to verify this delivery', 403));
     }
 
     // Verify location
     const instituteCoords = shipping.donation.institute.geolocation.coordinates;
-    const isValidLocation = shipping.verifyLocation(instituteCoords);
+    const isValidLocation = geolib.isPointWithinRadius(
+        { latitude, longitude },
+        { latitude: instituteCoords[1], longitude: instituteCoords[0] },
+        120
+    );
 
     if (!isValidLocation) {
-        return next(new AppError('Delivery must be within 120 meters of institute', 400));
+        return next(new AppError('Delivery must be verified within 120 meters of the institute', 400));
     }
 
     // Update shipping record
     shipping.status = 'delivered';
     shipping.deliveryProof = {
-        photo,
-        coordinates: {
-            type: 'Point',
-            coordinates: coordinates
-        },
+        coordinates: [longitude, latitude],
         timestamp: Date.now()
     };
-
     await shipping.save();
 
     // Update donation status
     await Donation.findByIdAndUpdate(shipping.donation._id, { status: 'completed' });
 
-    // Send confirmation emails
-    await new Email(shipping.donation.institute.user).sendDeliveryConfirmation(shipping);
-
     res.status(200).json({
         status: 'success',
-        data: { shipping }
+        message: 'Delivery verified successfully',
+        data: {
+            shipping,
+            instituteName: shipping.donation.institute.institute_name
+        }
     });
 });
 
-exports.verifyQRCode = catchAsync(async (req, res, next) => {
-    const { qrCode } = req.params;
+// Optional: Get delivery status
+exports.getDeliveryStatus = catchAsync(async (req, res, next) => {
+    const { code } = req.params;
 
-    const shipping = await Shipping.findOne({ qrCode });
-    if (!shipping) return next(new AppError('Invalid QR code', 400));
+    const shipping = await Shipping.findOne({ 
+        qrCode: code.toUpperCase() 
+    }).populate({
+        path: 'donation',
+        select: 'items totalAmount status',
+        populate: [
+            { 
+                path: 'institute',
+                select: 'institute_name' 
+            },
+            { 
+                path: 'shop',
+                select: 'shopName' 
+            }
+        ]
+    });
 
-    shipping.status = 'delivered';
-    await shipping.save();
+    if (!shipping) {
+        return next(new AppError('Invalid verification code', 404));
+    }
 
     res.status(200).json({
         status: 'success',
-        message: 'QR code verified and delivery confirmed',
-        data: { shipping }
+        data: {
+            status: shipping.status,
+            donation: shipping.donation
+        }
     });
 }); 

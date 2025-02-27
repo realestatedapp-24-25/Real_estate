@@ -6,7 +6,17 @@ const router = express.Router();
 
 router.use(authController.protect);
 
-router.post('/verify-delivery/:qrCode', authController.restrictTo('shopkeeper'), shippingController.verifyDelivery);
-router.post('/verify-qr/:qrCode', authController.restrictTo('shopkeeper'), shippingController.verifyQRCode);
+// Verify delivery using geolocation and photo
+router.post(
+    '/verify-delivery/:code',
+    authController.restrictTo('shopkeeper'),
+    shippingController.verifyDelivery
+);
+
+// Get delivery status
+router.get(
+    '/status/:code',
+    shippingController.getDeliveryStatus
+);
 
 module.exports = router; 
