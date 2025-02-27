@@ -4,18 +4,18 @@ const { convert } = require("html-to-text");
 const path = require('path');
 
 module.exports = class Email {
-  constructor(user, url) {
+  constructor(user, data) {
+    if (!user || !user.email || !user.name) {
+      throw new Error('Invalid user data for email');
+    }
+    
     this.to = user.email;
-    this.firstName = user.name.split(" ")[0];
-    this.url = url;
-    this.from = `Your App Name <${process.env.GMAIL_ADDRESS}>`;
+    this.firstName = user.name.split(" ")[0] || user.name;
+    this.data = data || {};
+    this.from = `Donation App <${process.env.GMAIL_ADDRESS}>`;
   }
 
   newTransport() {
-    if (!process.env.GMAIL_ADDRESS || !process.env.GMAIL_APP_PASSWORD) {
-      throw new Error("Gmail credentials are missing in environment variables");
-    }
-
     return nodemailer.createTransport({
       service: "gmail",
       host: "smtp.gmail.com",
@@ -32,16 +32,19 @@ module.exports = class Email {
   }
 
   // Send the actual email
-  async send(template, subject, additionalData = {}) {
+  async send(template, subject) {
     try {
-      console.log("Attempting to send email to:", this.to);
-      console.log("Using Gmail address:", process.env.GMAIL_ADDRESS);
+      console.log("Sending email with data:", this.data);
 
       const html = pug.renderFile(`${__dirname}/../email/${template}.pug`, {
         firstName: this.firstName,
-        url: this.url,
         subject,
-        ...additionalData,
+        instituteName: this.data.instituteName,
+        items: this.data.items || [],
+        totalAmount: this.data.totalAmount,
+        qrCodeData: this.data.qrCodeData,
+        shopName: this.data.shopName,
+        instituteAddress: this.data.instituteAddress
       });
 
       const mailOptions = {
@@ -49,20 +52,13 @@ module.exports = class Email {
         to: this.to,
         subject,
         html,
-        text: convert(html),
-        headers: {
-          Priority: "High",
-          "X-MS-Exchange-Organization-BypassFocusedInbox": "true",
-          "X-Priority": "1",
-          Importance: "high",
-        },
+        text: convert(html)
       };
 
-      const result = await this.newTransport().sendMail(mailOptions);
-      console.log("Email sent successfully:", result);
-      return result;
+      await this.newTransport().sendMail(mailOptions);
+      console.log('Email sent successfully');
     } catch (error) {
-      console.error("Error sending email:", error);
+      console.error('Error sending email:', error);
       throw error;
     }
   }
@@ -86,16 +82,15 @@ module.exports = class Email {
     });
   }
 
-  async sendDonationNotificationWithQR(instituteName, items, totalAmount, qrCodeData) {
-    await this.send('donationNotificationWithQR', 'New Donation Received', {
-      instituteName,
-      items,
-      totalAmount,
-      qrCodeData
-    });
+  async sendDonationNotificationWithQR() {
+    await this.send('donationNotificationWithQR', 'New Donation Received');
   }
 
   async sendAnomalyAlert() {
     await this.send('anomalyAlert', 'High Request Activity Alert');
+  }
+
+  async sendShopDeliveryNotification() {
+    await this.send('shopDeliveryNotification', 'New Delivery Request');
   }
 };

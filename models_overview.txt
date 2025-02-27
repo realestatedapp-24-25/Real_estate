@@ -171,7 +171,7 @@ shippingSchema.methods.verifyLocation = function(instituteCoords) {
     return geolib.isPointWithinRadius(
         { latitude: this.deliveryProof.coordinates[1], longitude: this.deliveryProof.coordinates[0] },
         { latitude: instituteCoords[1], longitude: instituteCoords[0] },
-        120
+        120 // 120 meters radius
     );
 };
 
@@ -370,9 +370,17 @@ exports.createDonation = catchAsync(async (req, res, next) => {
     const { items, shopId, totalAmount } = req.body;
 
     // Verify institute exists
-    const institute = await Institute.findById(instituteId);
+    const institute = await Institute.findById(instituteId)
+        .populate('user');
     if (!institute) {
         return next(new AppError('Institute not found', 404));
+    }
+
+    // Verify shop exists
+    const shop = await Shop.findById(shopId)
+        .populate('user');
+    if (!shop) {
+        return next(new AppError('Shop not found', 404));
     }
 
     // Create donation
@@ -384,19 +392,25 @@ exports.createDonation = catchAsync(async (req, res, next) => {
         totalAmount
     });
 
-    // Create shipping record with QR code
-    const qrCode = generateQRCode(); // Utility function to generate unique QR
-    await Shipping.create({
-        donation: donation._id,
-        qrCode
-    });
+    // Generate QR code for delivery verification
+    const qrCodeData = await shippingController.generateDeliveryQR(donation._id);
 
-    // Send email notifications
+    // Send email to institute with QR code
     await new Email(institute.user, {
+        instituteName: institute.institute_name,
         items,
         totalAmount,
-        qrCodeData: qrCode
-    }).sendDonationNotification();
+        qrCodeData
+    }).sendDonationNotificationWithQR();
+
+    // Send email to shop
+    await new Email(shop.user, {
+        shopName: shop.shopName,
+        instituteName: institute.institute_name,
+        instituteAddress: institute.user.address,
+        items,
+        totalAmount
+    }).sendShopDeliveryNotification();
 
     res.status(201).json({
         status: 'success',
@@ -506,4 +520,168 @@ exports.getRequestWithShops = catchAsync(async (req, res, next) => {
             shops
         }
     });
-}); 
+});
+
+// controllers/shippingController.js
+const Shipping = require('../models/shippingModel');
+const Donation = require('../models/donationModel');
+const Institute = require('../models/instituteModel');
+const Shop = require('../models/shopModel');
+const Email = require('../utils/email');
+const AppError = require('../utils/appError');
+const catchAsync = require('../utils/catchAsync');
+const QRCode = require('qrcode');
+const { v4: uuidv4 } = require('uuid');
+
+exports.generateDeliveryQR = catchAsync(async (donationId) => {
+    const qrCode = uuidv4();
+    const qrImageData = await QRCode.toDataURL(qrCode);
+    
+    await Shipping.create({
+        donation: donationId,
+        qrCode
+    });
+
+    return qrImageData;
+});
+
+exports.verifyDelivery = catchAsync(async (req, res, next) => {
+    const { qrCode } = req.params;
+    const { photo, coordinates } = req.body;
+
+    // Find shipping record
+    const shipping = await Shipping.findOne({ qrCode })
+        .populate({
+            path: 'donation',
+            populate: [
+                { path: 'institute' },
+                { path: 'shop' }
+            ]
+        });
+
+    if (!shipping) {
+        return next(new AppError('Invalid QR code', 400));
+    }
+
+    // Verify shopkeeper
+    if (shipping.donation.shop.user.toString() !== req.user.id) {
+        return next(new AppError('You are not authorized to deliver this donation', 403));
+    }
+
+    // Verify location
+    const instituteCoords = shipping.donation.institute.geolocation.coordinates;
+    const isValidLocation = shipping.verifyLocation(instituteCoords);
+
+    if (!isValidLocation) {
+        return next(new AppError('Delivery must be within 120 meters of institute', 400));
+    }
+
+    // Update shipping record
+    shipping.status = 'delivered';
+    shipping.deliveryProof = {
+        photo,
+        coordinates: {
+            type: 'Point',
+            coordinates: coordinates
+        },
+        timestamp: Date.now()
+    };
+
+    await shipping.save();
+
+    // Update donation status
+    await Donation.findByIdAndUpdate(shipping.donation._id, { status: 'completed' });
+
+    // Send confirmation emails
+    await new Email(shipping.donation.institute.user).sendDeliveryConfirmation(shipping);
+
+    res.status(200).json({
+        status: 'success',
+        data: { shipping }
+    });
+});
+
+// email/donationNotificationWithQR.pug
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title New Donation Received
+  body(style="font-family: Arial, sans-serif; padding: 20px;")
+    div(style="max-width: 600px; margin: 0 auto;")
+      h1 New Donation Received
+      
+      p Dear #{instituteName},
+      
+      p A new donation has been made:
+      
+      ul
+        each item in items
+          li #{item.quantity} #{item.unit} of #{item.name}
+      
+      p Total Amount: ₹#{totalAmount}
+      
+      div(style="text-align: center; margin: 20px 0;")
+        img(src=qrCodeData alt="Delivery QR Code" style="width: 200px;")
+        p Please scan this QR code when the delivery arrives
+      
+      p The shopkeeper will need to:
+      p 1. Be within 120 meters of your location
+      p 2. Scan this QR code
+      p 3. Take a photo of the delivered items
+      
+      p Best regards,
+      p The Team
+
+// email/shopDeliveryNotification.pug
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title New Delivery Request
+  body(style="font-family: Arial, sans-serif; padding: 20px;")
+    div(style="max-width: 600px; margin: 0 auto;")
+      h1 New Delivery Request
+      
+      p Dear #{shopName},
+      
+      p Please prepare the following items for delivery:
+      
+      ul
+        each item in items
+          li #{item.quantity} #{item.unit} of #{item.name}
+      
+      p Delivery Instructions:
+      ol
+        li Go to the institute location
+        li Be within 120 meters of the institute
+        li Scan the QR code provided to the institute
+        li Take a photo of the delivered items
+      
+      p Institute Details:
+      p Name: #{instituteName}
+      p Address: #{instituteAddress}
+      
+      p Total Amount: ₹#{totalAmount}
+      
+      p Best regards,
+      p The Team 
+
+// routes/shippingRoute.js
+const express = require('express');
+const shippingController = require('../controllers/shippingController');
+const authController = require('../controllers/authController');
+
+const router = express.Router();
+
+router.use(authController.protect);
+
+router.post(
+    '/verify-delivery/:qrCode',
+    authController.restrictTo('shopkeeper'),
+    shippingController.verifyDelivery
+);
+
+module.exports = router; 

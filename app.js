@@ -9,6 +9,7 @@ const donorRouter = require('./routes/donorRoute');
 const instituteRouter = require('./routes/instituteRoute');
 const shopRouter = require('./routes/shopRoute');
 const requestRouter = require('./routes/requestRoute');
+const shippingRouter = require('./routes/shippingRoute');
 
 const AppError = require("./utils/appError");
 
@@ -41,6 +42,7 @@ app.use("/api/v1/donors", donorRouter);
 app.use("/api/v1/institutes", instituteRouter);
 app.use("/api/v1/shops", shopRouter);
 app.use("/api/v1/requests", requestRouter);
+app.use('/api/v1/shipping', shippingRouter);
 
 app.all("*", (req, res, next) => {
   next(new AppError(`can't find the ${req.originalUrl} url`));

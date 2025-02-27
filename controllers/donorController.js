@@ -7,6 +7,7 @@ const Request = require('../models/requestModel');
 const Donation = require('../models/donationModel');
 const Email = require('../utils/email');
 const QRCode = require('qrcode');
+const shippingController = require('../controllers/shippingController');
 
 // Create a new donor
 exports.createDonor = catchAsync(async (req, res, next) => {
@@ -224,11 +225,11 @@ exports.createDonation = catchAsync(async (req, res, next) => {
         return next(new AppError('Invalid donation data', 400));
     }
 
-    // Find shop and validate
-    const shop = await Shop.findById(shopId);
+    // Find shop and validate - Add populate for user
+    const shop = await Shop.findById(shopId).populate('user');
     if (!shop) return next(new AppError('Shop not found', 404));
 
-    // Find institute and validate
+    // Find institute and validate - Add populate for user
     const institute = await Institute.findById(instituteId).populate('user');
     if (!institute) return next(new AppError('Institute not found', 404));
 
@@ -302,6 +303,56 @@ exports.createDonation = catchAsync(async (req, res, next) => {
             'fulfillmentDetails.donors': req.user.id
         }
     });
+
+    try {
+        // Generate QR code for delivery verification
+        const qrCodeData = await shippingController.generateDeliveryQR(donation._id);
+
+        // Send email to institute with QR code
+        console.log('Sending email to institute:', {
+            instituteName: institute.institute_name,
+            items: fulfilledItems,
+            totalAmount,
+            qrCodeData
+        });
+
+        if (!institute.user || !institute.user.email || !institute.user.name) {
+            throw new Error('Institute user data is incomplete');
+        }
+
+        await new Email(institute.user, {
+            instituteName: institute.institute_name,
+            items: fulfilledItems,
+            totalAmount,
+            qrCodeData
+        }).sendDonationNotificationWithQR();
+
+        // Send email to shop
+        console.log('Sending email to shop:', {
+            shopName: shop.shopName,
+            instituteName: institute.institute_name,
+            instituteAddress: institute.user.address,
+            items: fulfilledItems,
+            totalAmount
+        });
+
+        if (!shop.user || !shop.user.email || !shop.user.name) {
+            throw new Error('Shop user data is incomplete');
+        }
+
+        await new Email(shop.user, {
+            shopName: shop.shopName,
+            instituteName: institute.institute_name,
+            instituteAddress: institute.user.address,
+            items: fulfilledItems,
+            totalAmount
+        }).sendShopDeliveryNotification();
+
+        console.log('Emails sent successfully');
+    } catch (error) {
+        console.error('Error sending emails:', error);
+        // Don't throw error, just log it - emails shouldn't block donation creation
+    }
 
     res.status(201).json({
         status: 'success',

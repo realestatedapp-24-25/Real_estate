@@ -23,10 +23,13 @@ const shippingSchema = new mongoose.Schema({
     coordinates: {
       type: {
         type: String,
-        default: "Point",
-        enum: ["Point"]
+        enum: ['Point'],
+        default: 'Point'
       },
-      coordinates: [Number]
+      coordinates: {
+        type: [Number],
+        default: [0, 0]
+      }
     },
     timestamp: Date
   },

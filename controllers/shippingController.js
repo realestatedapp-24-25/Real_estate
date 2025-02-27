@@ -4,6 +4,27 @@ const Donation = require('../models/donationModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const Request = require('../models/requestModel');
+const Email = require('../utils/email');
+const QRCode = require('qrcode');
+const { v4: uuidv4 } = require('uuid');
+
+exports.generateDeliveryQR = catchAsync(async (donationId) => {
+    const qrCode = uuidv4();
+    const qrImageData = await QRCode.toDataURL(qrCode);
+    
+    await Shipping.create({
+        donation: donationId,
+        qrCode,
+        deliveryProof: {
+            coordinates: {
+                type: "Point",
+                coordinates: [0, 0] // Default coordinates, will be updated during delivery
+            }
+        }
+    });
+
+    return qrImageData;
+});
 
 exports.verifyDelivery = catchAsync(async (req, res, next) => {
     const { qrCode } = req.params;
@@ -13,18 +34,24 @@ exports.verifyDelivery = catchAsync(async (req, res, next) => {
     const shipping = await Shipping.findOne({ qrCode })
         .populate({
             path: 'donation',
-            populate: { path: 'institute' }
+            populate: [
+                { path: 'institute' },
+                { path: 'shop' }
+            ]
         });
 
-    if (!shipping) return next(new AppError('Invalid QR code', 400));
+    if (!shipping) {
+        return next(new AppError('Invalid QR code', 400));
+    }
+
+    // Verify shopkeeper
+    if (shipping.donation.shop.user.toString() !== req.user.id) {
+        return next(new AppError('You are not authorized to deliver this donation', 403));
+    }
 
     // Verify location
     const instituteCoords = shipping.donation.institute.geolocation.coordinates;
-    const isValidLocation = geolib.isPointWithinRadius(
-        { latitude: coordinates[1], longitude: coordinates[0] },
-        { latitude: instituteCoords[1], longitude: instituteCoords[0] },
-        120
-    );
+    const isValidLocation = shipping.verifyLocation(instituteCoords);
 
     if (!isValidLocation) {
         return next(new AppError('Delivery must be within 120 meters of institute', 400));
@@ -34,20 +61,20 @@ exports.verifyDelivery = catchAsync(async (req, res, next) => {
     shipping.status = 'delivered';
     shipping.deliveryProof = {
         photo,
-        coordinates: [coordinates[0], coordinates[1]],
+        coordinates: {
+            type: 'Point',
+            coordinates: coordinates
+        },
         timestamp: Date.now()
     };
+
+    await shipping.save();
 
     // Update donation status
     await Donation.findByIdAndUpdate(shipping.donation._id, { status: 'completed' });
 
-    // Update request status
-    await Request.findOneAndUpdate(
-        { institute: shipping.donation.institute._id },
-        { status: 'fulfilled' }
-    );
-
-    await shipping.save();
+    // Send confirmation emails
+    await new Email(shipping.donation.institute.user).sendDeliveryConfirmation(shipping);
 
     res.status(200).json({
         status: 'success',
