@@ -69,6 +69,12 @@ const DashLayout = ({ children }) => {
                   <FiPackage className="w-5 h-5" />
                   <span>Send Request</span>
                 </NavLink>
+                <NavLink
+                  to="/institute-reviews"
+                  className="block p-2 text-gray-700 hover:bg-gray-200 rounded"
+                >
+                  Submit Reviews
+                </NavLink>
               </>
             )}
 
@@ -103,6 +109,16 @@ const DashLayout = ({ children }) => {
               >
                 <FiHeart className="w-5 h-5" />
                 <span>My Donations</span>
+              </NavLink>
+            )}
+
+            {/* Shopkeeper Donations Link */}
+            {user?.role === "shopkeeper" && (
+              <NavLink
+                to="/shopkeeper-donations"
+                className="block p-2 text-gray-700 hover:bg-gray-200 rounded"
+              >
+                Shopkeeper Donations
               </NavLink>
             )}
 

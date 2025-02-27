@@ -19,6 +19,7 @@ import MyDonations from './components/MyDonations';
 import RequestForm from './components/RequestForm';
 import { useContext } from 'react';
 import MyRequest from "./components/Myrequest";
+import InstituteReviews from './components/InstituteReviews';
 
 function App() {
   return (
@@ -81,6 +82,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route path="/institute-reviews" element={<InstituteReviews />} />
           </Routes>
           <Footer />
         </div>

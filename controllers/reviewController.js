@@ -1,17 +1,24 @@
 const Review = require('../models/reviewModel');
 const Donation = require('../models/donationModel');
+const Institute = require('../models/instituteModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 exports.createReview = catchAsync(async (req, res, next) => {
     const { rating, comment, shopId, donationId } = req.body;
 
+    // Find the institute associated with the logged-in user
+    const institute = await Institute.findOne({ user: req.user.id });
+
+    if (!institute) {
+        return next(new AppError('No institute found for this user', 404));
+    }
+
     // Check if donation exists and belongs to the institute
     const donation = await Donation.findOne({
         _id: donationId,
-        institute: req.user.institute,
+        institute: institute._id,
         shop: shopId,
-        status: 'completed' // Only allow reviews for completed donations
     });
 
     if (!donation) {
@@ -20,7 +27,7 @@ exports.createReview = catchAsync(async (req, res, next) => {
 
     // Check if review already exists
     const existingReview = await Review.findOne({
-        institute: req.user.institute,
+        institute: institute._id,
         donation: donationId
     });
 
@@ -30,7 +37,7 @@ exports.createReview = catchAsync(async (req, res, next) => {
 
     // Create review
     const review = await Review.create({
-        institute: req.user.institute,
+        institute: institute._id,
         shop: shopId,
         rating,
         comment,
@@ -72,9 +79,16 @@ exports.updateReview = catchAsync(async (req, res, next) => {
     const { rating, comment } = req.body;
     const { reviewId } = req.params;
 
+    // Find the institute associated with the logged-in user
+    const institute = await Institute.findOne({ user: req.user.id });
+
+    if (!institute) {
+        return next(new AppError('No institute found for this user', 404));
+    }
+
     const review = await Review.findOne({
         _id: reviewId,
-        institute: req.user.institute
+        institute: institute._id
     });
 
     if (!review) {
@@ -96,9 +110,16 @@ exports.updateReview = catchAsync(async (req, res, next) => {
 exports.deleteReview = catchAsync(async (req, res, next) => {
     const { reviewId } = req.params;
 
+    // Find the institute associated with the logged-in user
+    const institute = await Institute.findOne({ user: req.user.id });
+
+    if (!institute) {
+        return next(new AppError('No institute found for this user', 404));
+    }
+
     const review = await Review.findOne({
         _id: reviewId,
-        institute: req.user.institute
+        institute: institute._id
     });
 
     if (!review) {
