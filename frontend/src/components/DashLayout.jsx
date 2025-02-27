@@ -3,6 +3,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { UserCircle, ClipboardList, Heart, Building } from "lucide-react"; // Import Lucide icons
 import { Toaster } from "react-hot-toast";
+import { FiPackage } from "react-icons/fi";
 
 const DashLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -112,6 +113,21 @@ const DashLayout = () => {
                 </NavLink>
               </>
             )}
+
+            {/* Requests Link */}
+            <NavLink
+              to="requests"
+              className={({ isActive }) =>
+                `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-green-500/20 border border-green-500/30"
+                    : "hover:bg-green-500/20"
+                }`
+              }
+            >
+              <FiPackage className="w-5 h-5" />
+              <span>Requests</span>
+            </NavLink>
           </nav>
         </div>
       </div>

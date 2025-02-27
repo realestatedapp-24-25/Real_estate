@@ -12,6 +12,9 @@ import NavigationBar from "./components/NavigationBar";
 import Footer from "./components/Footer";
 import PostSignupForm from "./components/PostSignupForm";
 import RequestList from './components/RequestList';
+import RequestDetail from './components/RequestDetail';
+import DonationProcess from './components/DonationProcess';
+import DonationDetails from './components/DonationDetails';
 
 function App() {
   return (
@@ -25,6 +28,9 @@ function App() {
             <Route path="/signin" element={<SigninPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/requests" element={<RequestList />} />
+            <Route path="/requests/:id" element={<RequestDetail />} />
+            <Route path="/donate/:instituteId" element={<DonationProcess />} />
+            <Route path="/donate/:instituteId/details" element={<DonationDetails />} />
 
             {/* Protected Routes with DashLayout */}
             <Route

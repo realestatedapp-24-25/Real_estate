@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@maptiler/sdk": "^2.4.1",
+    "@maptiler/sdk": "^2.5.1",
     "@tabler/icons-react": "^3.22.0",
     "@tsparticles/engine": "^3.5.0",
     "@tsparticles/react": "^3.0.0",
