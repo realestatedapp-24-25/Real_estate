@@ -79,7 +79,7 @@ const DashLayout = ({ children }) => {
             )}
 
             {/* Shop Links */}
-            {user?.role === "shopkeeper" && (
+            {/* {user?.role === "shopkeeper" && (
               <NavLink
                 to="/profile/donations"
                 className={({ isActive }) =>
@@ -93,7 +93,7 @@ const DashLayout = ({ children }) => {
                 <FiGift className="w-5 h-5" />
                 <span>My Donations</span>
               </NavLink>
-            )}
+            )} */}
 
             {/* Donor Links */}
             {user?.role === "donor" && (
@@ -112,15 +112,6 @@ const DashLayout = ({ children }) => {
               </NavLink>
             )}
 
-            {/* Shopkeeper Donations Link */}
-            {user?.role === "shopkeeper" && (
-              <NavLink
-                to="/shopkeeper-donations"
-                className="block p-2 text-gray-700 hover:bg-gray-200 rounded"
-              >
-                Shopkeeper Donations
-              </NavLink>
-            )}
 
             {/* Settings Link */}
             <NavLink

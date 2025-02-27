@@ -58,7 +58,10 @@ const RequestList = () => {
       });
 
       const response = await axios.get(`/api/v1/requests/search?${queryParams}`, {
-        withCredentials: true
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       // Validate and transform the data if needed
@@ -73,7 +76,12 @@ const RequestList = () => {
       setError(null);
     } catch (err) {
       console.error('Error fetching requests:', err);
-      setError(err.response?.data?.message || 'Failed to fetch requests');
+      // More specific error handling
+      if (err.response?.status === 403) {
+        setError('You do not have permission to view requests');
+      } else {
+        setError(err.response?.data?.message || 'Failed to fetch requests');
+      }
       setRequests([]);
     } finally {
       setLoading(false);

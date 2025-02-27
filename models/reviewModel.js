@@ -17,6 +17,11 @@ const reviewSchema = new mongoose.Schema({
         min: 1,
         max: 5
     },
+    verdict: {
+        type: String,
+        enum: ['Positive', 'Neutral', 'Negative'],
+        default: 'Neutral'
+    },
     comment: {
         type: String,
         required: [true, 'Review must have a comment'],

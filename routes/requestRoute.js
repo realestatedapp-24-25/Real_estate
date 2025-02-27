@@ -13,17 +13,18 @@ router
     authController.restrictTo('institute'),
     requestController.getMyRequests
   );
+  router
+  .route('/search')
+  .get(
+    authController.protect, 
+    authController.restrictTo('admin', 'donor', 'institute','shopkeeper'),
+    requestController.searchRequests
+  );
 // Add this new route for getting request with nearby shops
 router.get('/:id/shops', requestController.getRequestWithShops);
 
 // Routes for requests
-router
-  .route('/search')
-  .get(
-    authController.protect, 
-    authController.restrictTo('admin', 'donor', 'institute'),
-    requestController.searchRequests
-  );
+
 
 router
   .route('/')
