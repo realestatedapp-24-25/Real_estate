@@ -15,6 +15,7 @@ import RequestList from './components/RequestList';
 import RequestDetail from './components/RequestDetail';
 import DonationProcess from './components/DonationProcess';
 import DonationDetails from './components/DonationDetails';
+import MyDonations from './components/MyDonations';
 
 function App() {
   return (
@@ -51,6 +52,17 @@ function App() {
                   <PostSignupForm />
                 </ProtectedRoute>
               }
+            />
+
+            <Route 
+              path="/profile/my-donations" 
+              element={
+                <ProtectedRoute>
+                  <DashLayout>
+                    <MyDonations />
+                  </DashLayout>
+                </ProtectedRoute>
+              } 
             />
           </Routes>
           <Footer />

@@ -2,8 +2,8 @@
 import { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { FiUser, FiMail, FiLock } from 'react-icons/fi';
-import { Check } from 'lucide-react';
+import { FiUser, FiMail, FiLock } from "react-icons/fi";
+import { Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const SignupPage = () => {
@@ -43,16 +43,26 @@ const SignupPage = () => {
   const [completedSteps, setCompletedSteps] = useState([]);
 
   const isPersonalInfoComplete = () => {
-    return formData.name && formData.email &&
-      formData.password && formData.passwordConfirm &&
-      !errors.name && !errors.email &&
-      !errors.password && !errors.passwordConfirm;
+    return (
+      formData.name &&
+      formData.email &&
+      formData.password &&
+      formData.passwordConfirm &&
+      !errors.name &&
+      !errors.email &&
+      !errors.password &&
+      !errors.passwordConfirm
+    );
   };
 
   const isAddressComplete = () => {
-    return formData.address.street && formData.address.city &&
-      formData.address.state && formData.address.pincode && 
-      !Object.values(errors.address).some(error => error);
+    return (
+      formData.address.street &&
+      formData.address.city &&
+      formData.address.state &&
+      formData.address.pincode &&
+      !Object.values(errors.address).some((error) => error)
+    );
   };
 
   const handleChange = (e) => {
@@ -102,7 +112,9 @@ const SignupPage = () => {
     if (!formData.email) {
       newErrors.email = "Email is required";
       isValid = false;
-    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
+    } else if (
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)
+    ) {
       newErrors.email = "Invalid email address";
       isValid = false;
     }
@@ -158,12 +170,15 @@ const SignupPage = () => {
           setShowSuccessAlert(true);
           setTimeout(() => {
             setShowSuccessAlert(false);
-            if (formData.role === "institute" || formData.role === "shopkeeper") {
-              navigate("/post-signup", { 
-                state: { 
+            if (
+              formData.role === "institute" ||
+              formData.role === "shopkeeper"
+            ) {
+              navigate("/post-signup", {
+                state: {
                   role: formData.role,
-                  email: formData.email  // Pass the email
-                } 
+                  email: formData.email, // Pass the email
+                },
               });
             } else {
               navigate("/");
@@ -187,10 +202,11 @@ const SignupPage = () => {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-mycol-brunswick_green mb-3">
-            Join Agro360 Today
+            Join hi Today
           </h1>
           <p className="text-mycol-sea_green text-lg max-w-2xl mx-auto">
-            Protect your agricultural investments with India's most trusted crop insurance platform
+            Protect your agricultural investments with India's most trusted crop
+            insurance platform
           </p>
         </div>
 
@@ -200,12 +216,13 @@ const SignupPage = () => {
               {[1, 2].map((step, index) => (
                 <div key={step} className="flex items-center">
                   <motion.div
-                    className={`relative flex items-center justify-center w-8 h-8 rounded-full ${completedSteps.includes(step)
-                      ? 'bg-mycol-mint'
-                      : currentStep === step
-                        ? 'bg-mycol-mint'
-                        : 'bg-mycol-celadon'
-                      } text-white`}
+                    className={`relative flex items-center justify-center w-8 h-8 rounded-full ${
+                      completedSteps.includes(step)
+                        ? "bg-mycol-mint"
+                        : currentStep === step
+                        ? "bg-mycol-mint"
+                        : "bg-mycol-celadon"
+                    } text-white`}
                   >
                     {completedSteps.includes(step) ? (
                       <Check className="w-5 h-5" />
@@ -213,8 +230,14 @@ const SignupPage = () => {
                       step
                     )}
                   </motion.div>
-                  <span className={`ml-2 ${currentStep === step ? 'text-mycol-brunswick_green font-medium' : 'text-mycol-sea_green'}`}>
-                    {step === 1 ? 'Personal Info' : 'Address'}
+                  <span
+                    className={`ml-2 ${
+                      currentStep === step
+                        ? "text-mycol-brunswick_green font-medium"
+                        : "text-mycol-sea_green"
+                    }`}
+                  >
+                    {step === 1 ? "Personal Info" : "Address"}
                   </span>
                   {index < 1 && (
                     <div className="mx-2 h-0.5 w-16 bg-mycol-celadon" />
@@ -255,7 +278,11 @@ const SignupPage = () => {
                               className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mycol-mint bg-white"
                               placeholder="Full Name"
                             />
-                            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                            {errors.name && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.name}
+                              </p>
+                            )}
                           </div>
 
                           <div className="relative">
@@ -268,7 +295,11 @@ const SignupPage = () => {
                               className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mycol-mint bg-white"
                               placeholder="Email Address"
                             />
-                            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                            {errors.email && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.email}
+                              </p>
+                            )}
                           </div>
 
                           <div className="relative">
@@ -281,7 +312,11 @@ const SignupPage = () => {
                               className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mycol-mint bg-white"
                               placeholder="Password"
                             />
-                            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                            {errors.password && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.password}
+                              </p>
+                            )}
                           </div>
 
                           <div className="relative">
@@ -294,7 +329,11 @@ const SignupPage = () => {
                               className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mycol-mint bg-white"
                               placeholder="Confirm Password"
                             />
-                            {errors.passwordConfirm && <p className="text-red-500 text-xs mt-1">{errors.passwordConfirm}</p>}
+                            {errors.passwordConfirm && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.passwordConfirm}
+                              </p>
+                            )}
                           </div>
 
                           <div className="md:col-span-2">
@@ -336,7 +375,11 @@ const SignupPage = () => {
                               className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mycol-mint bg-white"
                               placeholder="Street Address"
                             />
-                            {errors.address.street && <p className="text-red-500 text-xs mt-1">{errors.address.street}</p>}
+                            {errors.address.street && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.address.street}
+                              </p>
+                            )}
                           </div>
 
                           <div>
@@ -348,7 +391,11 @@ const SignupPage = () => {
                               className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mycol-mint bg-white"
                               placeholder="City"
                             />
-                            {errors.address.city && <p className="text-red-500 text-xs mt-1">{errors.address.city}</p>}
+                            {errors.address.city && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.address.city}
+                              </p>
+                            )}
                           </div>
 
                           <div>
@@ -360,7 +407,11 @@ const SignupPage = () => {
                               className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mycol-mint bg-white"
                               placeholder="State"
                             />
-                            {errors.address.state && <p className="text-red-500 text-xs mt-1">{errors.address.state}</p>}
+                            {errors.address.state && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.address.state}
+                              </p>
+                            )}
                           </div>
 
                           <div>
@@ -372,7 +423,11 @@ const SignupPage = () => {
                               className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mycol-mint bg-white"
                               placeholder="Pincode"
                             />
-                            {errors.address.pincode && <p className="text-red-500 text-xs mt-1">{errors.address.pincode}</p>}
+                            {errors.address.pincode && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.address.pincode}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -396,8 +451,7 @@ const SignupPage = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        if (isPersonalInfoComplete())
-                        {
+                        if (isPersonalInfoComplete()) {
                           setCurrentStep(2);
                         }
                       }}
@@ -413,14 +467,29 @@ const SignupPage = () => {
                     >
                       {loading ? (
                         <>
-                          <svg className="animate-spin h-5 w-5 mr-3 inline" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          <svg
+                            className="animate-spin h-5 w-5 mr-3 inline"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              fill="none"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
                           </svg>
                           Creating Account...
                         </>
                       ) : (
-                        'Create Account'
+                        "Create Account"
                       )}
                     </button>
                   )}
@@ -429,7 +498,10 @@ const SignupPage = () => {
                 {/* Login Link */}
                 <p className="text-sm text-gray-600 text-center">
                   Already have an account?{" "}
-                  <Link to="/signin" className="text-mycol-mint font-semibold hover:text-mycol-mint-2">
+                  <Link
+                    to="/signin"
+                    className="text-mycol-mint font-semibold hover:text-mycol-mint-2"
+                  >
                     Sign in
                   </Link>
                 </p>
@@ -438,8 +510,16 @@ const SignupPage = () => {
               {/* Alerts */}
               {showSuccessAlert && (
                 <div className="mt-4 p-4 bg-green-100 text-green-700 rounded-lg flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <span>Account created successfully! Redirecting...</span>
                 </div>
@@ -447,8 +527,16 @@ const SignupPage = () => {
 
               {loginError && (
                 <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-lg flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <span>Something went wrong. Please try again.</span>
                 </div>
@@ -461,12 +549,17 @@ const SignupPage = () => {
         <div className="text-center mt-8">
           <p className="text-sm text-mycol-sea_green">
             By creating an account, you agree to our{" "}
-            <a href="#" className="underline">Terms of Service</a> and{" "}
-            <a href="#" className="underline">Privacy Policy</a>
+            <a href="#" className="underline">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="underline">
+              Privacy Policy
+            </a>
           </p>
         </div>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 };
 

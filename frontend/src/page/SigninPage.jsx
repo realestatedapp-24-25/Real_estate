@@ -47,7 +47,7 @@ const SigninPage = () => {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-mycol-brunswick_green mb-3">
-            Welcome Back to Agro360
+            Welcome Back to hi
           </h1>
           <p className="text-mycol-sea_green text-lg max-w-2xl mx-auto">
             Access your dashboard and manage your activities

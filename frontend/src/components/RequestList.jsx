@@ -1,32 +1,100 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiPackage, FiClock, FiMapPin, FiPhone, FiMail } from 'react-icons/fi';
+import { FiPackage, FiClock, FiMapPin, FiPhone, FiMail, FiSearch, FiFilter, FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 const RequestList = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('all'); // 'all', 'pending', 'fulfilled'
+  const [showFilters, setShowFilters] = useState(false);
   const navigate = useNavigate();
+
+  // Search states
+  const [searchParams, setSearchParams] = useState({
+    institute_name: '',
+    institute_type: '',
+    category: '',
+    status: '',
+    urgency: ''
+  });
+
+  // Constants for dropdowns
+  const INSTITUTE_TYPES = [
+    { value: 'ORPHANAGE', label: 'Orphanage', emoji: '👶' },
+    { value: 'OLD_AGE_HOME', label: 'Old Age Home', emoji: '👴' },
+    { value: 'SHELTER', label: 'Shelter', emoji: '🏠' },
+    { value: 'OTHER', label: 'Other', emoji: '🏢' }
+  ];
+
+  const CATEGORIES = [
+    { value: 'FOOD', label: 'Food' },
+    { value: 'CLOTHING', label: 'Clothing' },
+    { value: 'EDUCATION', label: 'Education' },
+    { value: 'MEDICAL', label: 'Medical' },
+    { value: 'OTHER', label: 'Other' }
+  ];
+
+  const URGENCY_LEVELS = [
+    { value: 'HIGH', label: 'High Priority' },
+    { value: 'MEDIUM', label: 'Medium Priority' },
+    { value: 'LOW', label: 'Low Priority' }
+  ];
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [searchParams]);
 
   const fetchRequests = async () => {
     try {
-      const response = await axios.get('/api/v1/requests', {
+      setLoading(true);
+      
+      // Build query string from searchParams
+      const queryParams = new URLSearchParams();
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (value && value.trim() !== '') {
+          queryParams.append(key, value);
+        }
+      });
+
+      const response = await axios.get(`/api/v1/requests/search?${queryParams}`, {
         withCredentials: true
       });
-      console.log('Requests:', response.data.data.requests); // For debugging
-      setRequests(response.data.data.requests);
-      setLoading(false);
+
+      // Validate and transform the data if needed
+      const validatedRequests = response.data.data.requests.map(request => ({
+        ...request,
+        institute: request.institute || null,
+        status: request.status || 'pending',
+        items: Array.isArray(request.items) ? request.items : []
+      }));
+
+      setRequests(validatedRequests);
+      setError(null);
     } catch (err) {
       console.error('Error fetching requests:', err);
       setError(err.response?.data?.message || 'Failed to fetch requests');
+      setRequests([]);
+    } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearchChange = (field, value) => {
+    setSearchParams(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const clearFilters = () => {
+    setSearchParams({
+      institute_name: '',
+      institute_type: '',
+      category: '',
+      status: '',
+      urgency: ''
+    });
   };
 
   const formatDate = (dateString) => {
@@ -38,22 +106,21 @@ const RequestList = () => {
   };
 
   const getInstituteTypeIcon = (type) => {
-    switch (type) {
-      case 'ORPHANAGE':
-        return '👶';
-      case 'ELDERLY_HOME':
-        return '👴';
-      case 'FOOD_PROVIDER':
-        return '🍲';
-      default:
-        return '🏢';
+    if (!type) return '🏢';
+    
+    switch (type.toUpperCase()) {
+        case 'ORPHANAGE':
+            return '👶';
+        case 'OLD_AGE_HOME':
+            return '👴';
+        case 'SHELTER':
+            return '🏠';
+        case 'FOOD_PROVIDER':
+            return '🍲';
+        default:
+            return '🏢';
     }
   };
-
-  const filteredRequests = requests.filter(request => {
-    if (filter === 'all') return true;
-    return request.status === filter;
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-mycol-nyanza via-white to-mycol-celadon-2">
@@ -65,44 +132,125 @@ const RequestList = () => {
         </div>
       </div>
 
-      {/* Filter Section */}
+      {/* Search and Filter Section */}
       <div className="container mx-auto px-4 py-6">
-        <div className="flex gap-4">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'all'
-                ? 'bg-mycol-mint text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            All Requests
-          </button>
-          <button
-            onClick={() => setFilter('pending')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'pending'
-                ? 'bg-mycol-mint text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            Pending
-          </button>
-          <button
-            onClick={() => setFilter('fulfilled')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'fulfilled'
-                ? 'bg-mycol-mint text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            Fulfilled
-          </button>
-        </div>
-      </div>
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          {/* Search Bar */}
+          <div className="flex gap-4 mb-6">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Search by institute name..."
+                value={searchParams.institute_name}
+                onChange={(e) => handleSearchChange('institute_name', e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mycol-mint focus:border-transparent"
+              />
+              <FiSearch className="absolute left-3 top-3 text-gray-400" />
+            </div>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="px-4 py-2 bg-mycol-mint text-white rounded-lg hover:bg-mycol-mint-2 transition-colors flex items-center gap-2"
+            >
+              <FiFilter />
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
+            </button>
+          </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 pb-12">
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Institute Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Institute Type
+                </label>
+                <select
+                  value={searchParams.institute_type}
+                  onChange={(e) => handleSearchChange('institute_type', e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mycol-mint"
+                >
+                  <option value="">All Types</option>
+                  {INSTITUTE_TYPES.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.emoji} {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Category Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  value={searchParams.category}
+                  onChange={(e) => handleSearchChange('category', e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mycol-mint"
+                >
+                  <option value="">All Categories</option>
+                  {CATEGORIES.map(cat => (
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={searchParams.status}
+                  onChange={(e) => handleSearchChange('status', e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mycol-mint"
+                >
+                  <option value="">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="partially_fulfilled">Partially Fulfilled</option>
+                  <option value="fulfilled">Fulfilled</option>
+                </select>
+              </div>
+
+              {/* Urgency Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Urgency
+                </label>
+                <select
+                  value={searchParams.urgency}
+                  onChange={(e) => handleSearchChange('urgency', e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mycol-mint"
+                >
+                  <option value="">All Urgency Levels</option>
+                  {URGENCY_LEVELS.map(level => (
+                    <option key={level.value} value={level.value}>{level.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Clear Filters Button */}
+          {showFilters && (
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={clearFilters}
+                className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+              >
+                <FiX />
+                Clear All Filters
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Results Count */}
+        <div className="mb-4 text-gray-600">
+          Found {requests.length} requests
+        </div>
+
+        {/* Request Cards */}
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mycol-mint"></div>
@@ -113,7 +261,7 @@ const RequestList = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRequests.map((request) => (
+            {requests.map((request) => (
               <div
                 key={request._id}
                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
@@ -131,17 +279,29 @@ const RequestList = () => {
                         </h3>
                       </div>
                       <p className="text-sm text-gray-500 mt-1">
-                        {request.institute?.institute_type?.replace('_', ' ')}
+                        {request.institute?.institute_type ? 
+                            request.institute.institute_type.split('_').map(word => 
+                                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                            ).join(' ') 
+                            : 'Unknown Type'
+                        }
                       </p>
                     </div>
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         request.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-green-100 text-green-800'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : request.status === 'partially_fulfilled'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-green-100 text-green-800'
                       }`}
                     >
-                      {request.status}
+                      {request.status ? 
+                          request.status.split('_').map(word => 
+                              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                          ).join(' ')
+                          : 'Unknown Status'
+                      }
                     </span>
                   </div>
 
@@ -195,7 +355,7 @@ const RequestList = () => {
           </div>
         )}
 
-        {!loading && !error && filteredRequests.length === 0 && (
+        {!loading && !error && requests.length === 0 && (
           <div className="text-center py-8 text-gray-600">
             <FiPackage className="mx-auto h-12 w-12 text-gray-400" />
             <p className="mt-2 text-lg">No requests found</p>

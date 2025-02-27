@@ -15,8 +15,8 @@ export default function DonationDetails() {
             contactInfo: shop.contactInfo,
             address: shop.address,
             items: shop.inventory.map(item => ({
-                name: item.itemName,
                 itemName: item.itemName,
+                name: item.itemName,
                 quantity: 0,
                 unit: item.unit,
                 maxQuantity: item.quantity,
@@ -38,11 +38,11 @@ export default function DonationDetails() {
 
     const handleDonation = async (shopId, items) => {
         try {
-            console.log('Items before filtering:', items);
+            console.log('Original items:', items);
 
             const filteredItems = items.filter(item => item.quantity > 0)
                 .map(item => ({
-                    name: item.name || item.itemName,
+                    name: item.itemName,
                     quantity: item.quantity,
                     unit: item.unit
                 }));
@@ -52,10 +52,7 @@ export default function DonationDetails() {
                 return;
             }
 
-            console.log('Sending donation request:', {
-                shopId,
-                items: filteredItems
-            });
+            console.log('Filtered items for donation:', filteredItems);
 
             const response = await axios.post(
                 `/api/v1/donors/institute/${instituteId}/donate`,
@@ -82,7 +79,7 @@ export default function DonationDetails() {
                 shopId,
                 items: items.filter(item => item.quantity > 0)
                     .map(item => ({
-                        name: item.name || item.itemName,
+                        name: item.itemName,
                         quantity: item.quantity,
                         unit: item.unit
                     }))

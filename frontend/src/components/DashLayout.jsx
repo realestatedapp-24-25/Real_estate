@@ -3,12 +3,12 @@ import { NavLink, Outlet } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { UserCircle, ClipboardList, Heart, Building } from "lucide-react"; // Import Lucide icons
 import { Toaster } from "react-hot-toast";
-import { FiPackage } from "react-icons/fi";
+import { FiPackage, FiGift, FiUser, FiLogOut } from "react-icons/fi";
 
-const DashLayout = () => {
+const DashLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   useEffect(() => {
     const handleResize = () => {
@@ -20,7 +20,7 @@ const DashLayout = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
       {/* Sidebar */}
       <Toaster
         toastOptions={{
@@ -33,18 +33,22 @@ const DashLayout = () => {
           },
         }}
       />
-      <div
-        className={`${
-          isSidebarOpen ? "" : "hidden"
-        } sm:block w-64 bg-mycol-dartmouth_green text-white flex-shrink-0`}
-      >
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-8">Dashboard</h2>
+      <div className="w-full md:w-64 bg-white shadow-md">
+        <div className="p-4">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-10 h-10 rounded-full bg-mycol-mint flex items-center justify-center text-white font-bold">
+              {user?.name?.charAt(0) || "U"}
+            </div>
+            <div>
+              <h3 className="font-medium">{user?.name || "User"}</h3>
+              <p className="text-xs text-gray-500 capitalize">{user?.role || "User"}</p>
+            </div>
+          </div>
+
           <nav className="space-y-2">
-            {/* Profile Link - For all users */}
+            {/* Profile Link - Always visible */}
             <NavLink
-              to=""
-              end
+              to="/profile"
               className={({ isActive }) =>
                 `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                   isActive
@@ -52,29 +56,11 @@ const DashLayout = () => {
                     : "hover:bg-green-500/20"
                 }`
               }
+              end
             >
-              <UserCircle className="w-5 h-5" />
-              <span>My Profile</span>
+              <FiUser className="w-5 h-5" />
+              <span>Profile</span>
             </NavLink>
-
-            {/* Donor Links */}
-            {user.role === "donor" && (
-              <>
-                <NavLink
-                  to="my-donations"
-                  className={({ isActive }) =>
-                    `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-green-500/20 border border-green-500/30"
-                        : "hover:bg-green-500/20"
-                    }`
-                  }
-                >
-                  <Heart className="w-5 h-5" />
-                  <span>My Donations</span>
-                </NavLink>
-              </>
-            )}
 
             {/* Institute Links */}
             {user.role === "institute" && (
@@ -116,7 +102,7 @@ const DashLayout = () => {
 
             {/* Requests Link */}
             <NavLink
-              to="requests"
+              to="/profile/requests"
               className={({ isActive }) =>
                 `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                   isActive
@@ -128,56 +114,39 @@ const DashLayout = () => {
               <FiPackage className="w-5 h-5" />
               <span>Requests</span>
             </NavLink>
+
+            {/* Donations Link - Visible to donors only */}
+            {user.role === "donor" && (
+              <NavLink
+                to="/profile/my-donations"
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-green-500/20 border border-green-500/30"
+                      : "hover:bg-green-500/20"
+                  }`
+                }
+              >
+                <FiGift className="w-5 h-5" />
+                <span>My Donations</span>
+              </NavLink>
+            )}
+
+            {/* Logout Button */}
+            <button
+              onClick={logout}
+              className="w-full flex items-center space-x-3 p-3 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <FiLogOut className="w-5 h-5" />
+              <span>Logout</span>
+            </button>
           </nav>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1">
-        {/* Top Bar */}
-        <div className="p-4 sm:hidden">
-          <button
-            className="text-mycol-dartmouth_green"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          >
-            {isSidebarOpen ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16m-7 6h7"
-                />
-              </svg>
-            )}
-          </button>
-        </div>
-
-        {/* Content Area */}
-        <div className="p-6">
-          <Outlet />
-        </div>
+      <div className="flex-1 overflow-auto">
+        {children}
       </div>
     </div>
   );

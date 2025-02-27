@@ -5,21 +5,19 @@ import { AuthContext } from "../../context/AuthContext";
 
 function Navbar() {
   // const login = true; // Simulated login state
-  const { user, logout } = useContext(AuthContext)
+  const { user, logout } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const location = useLocation(); // To determine the current path
 
   const toggleDropdown = () => setIsOpen((prev) => !prev);
-  if (user)
-  {
+  if (user) {
     console.log(user);
   }
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target))
-      {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false); // Close the dropdown
       }
     };
@@ -40,7 +38,7 @@ function Navbar() {
         <div className="flex items-center justify-between max-w-screen-xl mx-auto px-6 py-5">
           {/* Logo and Title */}
           <div className="flex items-center space-x-6">
-            <img src={logo} className="h-14" alt="Agro360 Logo" />
+            <img src={logo} className="h-14" alt="hi Logo" />
             <span className="text-3xl font-semibold text-mycol-lightGreen">
               Crop Insurance
             </span>
@@ -68,40 +66,37 @@ function Navbar() {
                     onClick={toggleDropdown}
                     className="w-12 h-12 rounded-full focus:ring-4 focus:ring-gray-300"
                   >
-
                     {/* User Avatar */}
                     {user.photo !== "default.jpg" ? (
                       <img
                         className="w-full h-full rounded-full"
                         src={user.photo}
                         alt="user"
-                      />) : (
+                      />
+                    ) : (
                       // add default png for avatar
                       <img
                         className="w-full h-full rounded-full"
                         src="../../assets/default_avatar.jpg"
                         alt="user"
                       />
-                    )
-                    }
-
+                    )}
                   </button>
                 </div>
 
                 {/* Dropdown Menu */}
                 <div
                   ref={dropdownRef}
-                  className={`absolute right-0 top-4 mt-4 w-52 bg-white rounded-lg shadow-lg border border-gray-200 transform transition-all ${isOpen
-                    ? "opacity-100 scale-100"
-                    : "opacity-0 scale-95 pointer-events-none"
-                    }`}
+                  className={`absolute right-0 top-4 mt-4 w-52 bg-white rounded-lg shadow-lg border border-gray-200 transform transition-all ${
+                    isOpen
+                      ? "opacity-100 scale-100"
+                      : "opacity-0 scale-95 pointer-events-none"
+                  }`}
                 >
                   {/* information */}
                   <div className="px-4 py-4">
                     <p className="text-lg text-gray-700">{user.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {user.email}
-                    </p>
+                    <p className="text-sm text-gray-500">{user.email}</p>
                   </div>
                   <ul className="py-1">
                     <li>
@@ -109,7 +104,9 @@ function Navbar() {
                         to="/profile"
                         className="block px-4 py-3 text-lg text-gray-700 hover:bg-gray-100"
                       >
-                        {user.role === "admin" ? "Admin Dashboard" : "Dashboard"}
+                        {user.role === "admin"
+                          ? "Admin Dashboard"
+                          : "Dashboard"}
                       </Link>
                     </li>
                     <li>
@@ -166,8 +163,9 @@ function Navbar() {
             <li>
               <Link
                 to="/"
-                className={`hover:underline ${isActive("/") ? "text-green-600 underline" : "text-gray-700"
-                  }`}
+                className={`hover:underline ${
+                  isActive("/") ? "text-green-600 underline" : "text-gray-700"
+                }`}
               >
                 Home
               </Link>
@@ -175,10 +173,11 @@ function Navbar() {
             <li>
               <Link
                 to="/insurance"
-                className={`hover:underline ${isActive("/insurance")
-                  ? "text-green-600 underline"
-                  : "text-gray-700"
-                  }`}
+                className={`hover:underline ${
+                  isActive("/insurance")
+                    ? "text-green-600 underline"
+                    : "text-gray-700"
+                }`}
               >
                 Insurance
               </Link>
@@ -186,10 +185,11 @@ function Navbar() {
             <li>
               <Link
                 to="/features"
-                className={`hover:underline ${isActive("/features")
-                  ? "text-green-600 underline"
-                  : "text-gray-700"
-                  }`}
+                className={`hover:underline ${
+                  isActive("/features")
+                    ? "text-green-600 underline"
+                    : "text-gray-700"
+                }`}
               >
                 Features
               </Link>
@@ -197,10 +197,11 @@ function Navbar() {
             <li>
               <Link
                 to="/about-us"
-                className={`hover:underline ${isActive("/about-us")
-                  ? "text-green-600 underline"
-                  : "text-gray-700"
-                  }`}
+                className={`hover:underline ${
+                  isActive("/about-us")
+                    ? "text-green-600 underline"
+                    : "text-gray-700"
+                }`}
               >
                 About Us
               </Link>

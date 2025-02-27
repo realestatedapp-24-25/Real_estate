@@ -38,9 +38,9 @@ function NavigationBar() {
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
               <Link to="/" className="flex items-center">
-                <img src={logo} className="h-14 w-auto" alt="Agro360 Logo" />
+                <img src={logo} className="h-14 w-auto" alt="hi Logo" />
                 <span className="ml-4 text-2xl font-semibold text-gray-900">
-                  Agro360
+                  hi
                 </span>
               </Link>
             </div>
