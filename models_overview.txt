@@ -1,0 +1,128 @@
+// models/donorModel.js
+const mongoose = require('mongoose');
+
+const donorSchema = new mongoose.Schema({
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    total_donations: { type: Number, default: 0 },
+    last_donation_date: { type: Date }
+});
+
+module.exports = mongoose.model('Donor', donorSchema);
+
+// models/shopModel.js
+const mongoose = require('mongoose');
+
+const shopSchema = new mongoose.Schema({
+    shopName: { type: String, required: true },
+    inventory: [{
+        itemName: { type: String, required: true },
+        quantity: { type: Number, required: true },
+        pricePerUnit: { type: Number, required: true }
+    }],
+    contactInfo: {
+        email: { type: String, required: true },
+        phone: { type: String }
+    },
+    geolocation: {
+        type: { type: String, default: "Point", enum: ["Point"] },
+        coordinates: [Number]
+    },
+    verificationStatus: { type: Boolean, default: false },
+    rating: { type: Number, default: 0 }
+});
+
+shopSchema.index({ geolocation: '2dsphere' });
+
+module.exports = mongoose.model('Shop', shopSchema);
+
+// models/instituteModel.js
+const mongoose = require('mongoose');
+
+const instituteSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    geolocation: {
+        type: { type: String, default: "Point", enum: ["Point"] },
+        coordinates: [Number]
+    },
+    contactInfo: {
+        email: { type: String, required: true },
+        phone: { type: String }
+    }
+});
+
+instituteSchema.index({ geolocation: '2dsphere' });
+
+module.exports = mongoose.model('Institute', instituteSchema);
+
+// models/requestModel.js
+const mongoose = require('mongoose');
+
+const requestSchema = new mongoose.Schema({
+    institute: { type: mongoose.Schema.Types.ObjectId, ref: 'Institute', required: true },
+    items: [{
+        name: { type: String, required: true },
+        quantity: { type: Number, required: true }
+    }],
+    status: { type: String, enum: ['pending', 'fulfilled'], default: 'pending' },
+    createdAt: { type: Date, default: Date.now }
+});
+
+module.exports = mongoose.model('Request', requestSchema);
+
+// models/donationModel.js
+const mongoose = require('mongoose');
+
+const donationSchema = new mongoose.Schema({
+    donor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    institute: { type: mongoose.Schema.Types.ObjectId, ref: 'Institute', required: true },
+    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true },
+    items: [{
+        name: { type: String, required: true },
+        quantity: { type: Number, required: true },
+        unit: { type: String, required: true }
+    }],
+    totalAmount: { type: Number, required: true },
+    status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
+    createdAt: { type: Date, default: Date.now }
+});
+
+module.exports = mongoose.model('Donation', donationSchema);
+
+// models/shippingModel.js
+const mongoose = require('mongoose');
+
+const shippingSchema = new mongoose.Schema({
+    donation: { type: mongoose.Schema.Types.ObjectId, ref: 'Donation', required: true },
+    shopkeeper: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    status: { type: String, enum: ['pending', 'shipped', 'delivered'], default: 'pending' },
+    deliveryPhoto: { type: String },
+    deliveryLocation: {
+        type: { type: String, default: "Point", enum: ["Point"] },
+        coordinates: [Number]
+    },
+    createdAt: { type: Date, default: Date.now }
+});
+
+shippingSchema.index({ deliveryLocation: '2dsphere' });
+
+module.exports = mongoose.model('Shipping', shippingSchema);
+
+// models/userModel.js
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true, select: false },
+    role: { type: String, enum: ['user', 'admin', 'donor', 'shopkeeper', 'institute'], default: 'user' }
+});
+
+userSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    this.password = await bcrypt.hash(this.password, 12);
+    next();
+});
+
+module.exports = mongoose.model('User', userSchema); 
