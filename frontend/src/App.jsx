@@ -20,6 +20,8 @@ import RequestForm from './components/RequestForm';
 import { useContext } from 'react';
 import MyRequest from "./components/Myrequest";
 import InstituteReviews from './components/InstituteReviews';
+import Features from './components/Features';
+import AboutUs from './components/AboutUs';
 
 function App() {
   return (
@@ -84,6 +86,10 @@ function App() {
             />
 
             <Route path="/institute-reviews" element={<InstituteReviews />} />
+
+            {/* Add these new routes */}
+            <Route path="/features" element={<Features />} />
+            <Route path="/aboutus" element={<AboutUs />} />
           </Routes>
           <Footer />
         </div>
