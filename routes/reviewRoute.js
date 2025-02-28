@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Protect all routes after this middleware
 router.use(authController.protect);
-
+router.get('/my-reviews',  reviewController.getMyShopReviews);
 // Only institutes can create/manage reviews
 router.use(authController.restrictTo('institute'));
 

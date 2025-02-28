@@ -139,6 +139,7 @@ const Institute = require('../models/instituteModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const axios = require('axios');
+const Shop = require('../models/shopModel');
 
 // Flask sentiment analysis API endpoint
 const SENTIMENT_API_URL = 'http://localhost:5001/predict_sentiment';
@@ -346,6 +347,35 @@ exports.getShopSentimentStats = catchAsync(async (req, res, next) => {
         status: 'success',
         data: {
             sentimentStats: formattedStats
+        }
+    });
+});
+
+// Get reviews for logged in shop keeper
+exports.getMyShopReviews = catchAsync(async (req, res, next) => {
+    // Find the shop associated with the logged-in user
+    const shop = await Shop.findOne({ user: req.user.id });
+
+    if (!shop) {
+        return next(new AppError('No shop found for this user', 404));
+    }
+
+    const reviews = await Review.find({ shop: shop._id })
+        .populate({
+            path: 'institute',
+            select: 'institute_name'
+        })
+        .populate({
+            path: 'donation',
+            select: 'items totalAmount createdAt'
+        })
+        .sort('-createdAt');
+
+    res.status(200).json({
+        status: 'success',
+        results: reviews.length,
+        data: {
+            reviews
         }
     });
 });

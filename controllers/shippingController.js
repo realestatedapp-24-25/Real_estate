@@ -59,17 +59,26 @@ exports.verifyDelivery = catchAsync(async (req, res, next) => {
         });
 
     if (!shipping) {
-        return next(new AppError('Invalid verification code', 400));
+        return res.status(400).json({
+            status: 'error',
+            message: 'Invalid verification code'
+        });
     }
 
     // Check if already delivered
     if (shipping.status === 'delivered') {
-        return next(new AppError('This delivery has already been verified', 400));
+        return res.status(400).json({
+            status: 'error',
+            message: 'This delivery has already been verified'
+        });
     }
 
     // Verify shopkeeper
     if (shipping.donation.shop.user.toString() !== req.user.id) {
-        return next(new AppError('You are not authorized to verify this delivery', 403));
+        return res.status(403).json({
+            status: 'error',
+            message: 'You are not authorized to verify this delivery'
+        });
     }
 
     // Verify location
@@ -81,7 +90,10 @@ exports.verifyDelivery = catchAsync(async (req, res, next) => {
     );
 
     if (!isValidLocation) {
-        return next(new AppError('Delivery must be verified within 120 meters of the institute', 400));
+        return res.status(400).json({
+            status: 'error',
+            message: 'Delivery must be verified within 120 meters of the institute'
+        });
     }
 
     // Update shipping record
