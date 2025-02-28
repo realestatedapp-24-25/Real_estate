@@ -34,17 +34,13 @@ module.exports = class Email {
   // Send the actual email
   async send(template, subject) {
     try {
-      console.log("Sending email with data:", {
-        ...this.data,
-        qrCodePresent: !!this.data.qrCodeData
-      });
-
       const html = pug.renderFile(`${__dirname}/../email/${template}.pug`, {
         firstName: this.firstName,
         subject,
         instituteName: this.data.instituteName,
         items: this.data.items || [],
         totalAmount: this.data.totalAmount,
+        verificationCode: this.data.verificationCode,
         qrCodeData: this.data.qrCodeData,
         shopName: this.data.shopName,
         instituteAddress: this.data.instituteAddress
@@ -59,7 +55,7 @@ module.exports = class Email {
       };
 
       await this.newTransport().sendMail(mailOptions);
-      console.log('Email sent successfully with QR code');
+      console.log('Email sent successfully');
     } catch (error) {
       console.error('Error sending email:', error);
       throw error;

@@ -40,7 +40,7 @@ function NavigationBar() {
               <Link to="/" className="flex items-center">
                 <img src={logo} className="h-14 w-auto" alt="hi Logo" />
                 <span className="ml-4 text-2xl font-semibold text-gray-900">
-                  hi
+                  Care Connect
                 </span>
               </Link>
             </div>
@@ -75,9 +75,9 @@ function NavigationBar() {
                     : "text-gray-500 hover:text-gray-900"
                 }`}
               >
-                Features
+                About Us
               </Link>
-              <Link
+              {/* <Link
                 to="/aboutus"
                 className={`text-lg font-medium ${
                   isActive("/aboutus")
@@ -86,7 +86,7 @@ function NavigationBar() {
                 }`}
               >
                 About Us
-              </Link>
+              </Link> */}
 
               {/* Greeting & Profile Section */}
               {user && (

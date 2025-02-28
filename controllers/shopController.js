@@ -77,6 +77,7 @@ exports.getNearbyShops = catchAsync(async (req, res, next) => {
 
     const radius = distance / 6378.1; // Convert distance to radians (Earth's radius in km)
 
+    // First get all shops within the radius
     const shops = await Shop.find({
         location: {
             $geoWithin: {
@@ -92,10 +93,45 @@ exports.getNearbyShops = catchAsync(async (req, res, next) => {
         });
     }
 
+    // Get the latest donation for each shop
+    const Donation = require('../models/donationModel');
+    const shopDonations = await Donation.aggregate([
+        {
+            $match: {
+                shop: { $in: shops.map(shop => shop._id) }
+            }
+        },
+        {
+            $sort: { createdAt: -1 }
+        },
+        {
+            $group: {
+                _id: '$shop',
+                lastDonationDate: { $first: '$createdAt' }
+            }
+        }
+    ]);
+
+    // Create a map of shop ID to last donation date
+    const shopDonationMap = new Map(
+        shopDonations.map(item => [item._id.toString(), item.lastDonationDate])
+    );
+
+    // Sort shops: shops with no donations first, then by oldest donation
+    const sortedShops = [...shops].sort((a, b) => {
+        const aDate = shopDonationMap.get(a._id.toString());
+        const bDate = shopDonationMap.get(b._id.toString());
+        
+        if (!aDate && !bDate) return 0;
+        if (!aDate) return -1;
+        if (!bDate) return 1;
+        return aDate - bDate;
+    });
+
     res.status(200).json({
         status: 'success',
-        results: shops.length,
-        data: { shops }
+        results: sortedShops.length,
+        data: { shops: sortedShops }
     });
 });
 

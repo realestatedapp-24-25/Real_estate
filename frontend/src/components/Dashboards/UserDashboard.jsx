@@ -155,11 +155,11 @@ const Profile = () => {
     switch (user.role) {
       case 'donor':
         return {
-          gradient: 'from-rose-500 to-pink-600',
-          iconBg: 'bg-rose-100',
-          iconColor: 'text-rose-500',
-          lightBg: 'bg-rose-50',
-          textColor: 'text-rose-600'
+          gradient: 'from-emerald-600 to-teal-700',
+          iconBg: 'bg-emerald-100',
+          iconColor: 'text-emerald-600',
+          lightBg: 'bg-emerald-50',
+          textColor: 'text-emerald-600'
         };
       case 'shopkeeper':
         return {
@@ -194,7 +194,7 @@ const Profile = () => {
   const getRoleIcon = () => {
     switch (user.role) {
       case 'donor':
-        return <Heart className="h-6 w-6 text-rose-500" />;
+        return <Heart className="h-6 w-6 text-emerald-600" />;
       case 'shopkeeper':
         return <Store className="h-6 w-6 text-amber-500" />;
       case 'institute':
