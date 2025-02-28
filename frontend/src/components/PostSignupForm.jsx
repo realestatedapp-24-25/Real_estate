@@ -12,6 +12,7 @@ const PostSignupForm = () => {
   const [formData, setFormData] = useState(
     userRole === "institute"
       ? {
+          institute_name: "",
           institute_type: "",
           description: "",
           geolocation: {
@@ -123,6 +124,20 @@ const PostSignupForm = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {userRole === "institute" ? (
             <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Institute Name
+                </label>
+                <input
+                  type="text"
+                  name="institute_name"
+                  value={formData.institute_name}
+                  onChange={handleChange}
+                  className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-mycol-mint focus:outline-none focus:ring-mycol-mint"
+                  required
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Institute Type

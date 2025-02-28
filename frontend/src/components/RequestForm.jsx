@@ -8,7 +8,7 @@ const RequestForm = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     category: "",
-    priority: "MEDIUM",
+    priority: "medium",
     comments: "",
     items: [{ name: "", quantity: "", unit: "" }],
   });
@@ -84,9 +84,9 @@ const RequestForm = () => {
             onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
             className="w-full p-2 border rounded"
           >
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
           </select>
         </div>
 
